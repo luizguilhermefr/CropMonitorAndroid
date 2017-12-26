@@ -8,11 +8,9 @@ import android.support.design.widget.BottomNavigationView.OnNavigationItemSelect
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-import android.widget.FrameLayout;
 
 public class MainActivity extends AppCompatActivity implements MonitorFragment.OnFragmentInteractionListener {
 
-    FrameLayout frame;
 
     private OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new OnNavigationItemSelectedListener() {
@@ -42,11 +40,12 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
 
         getSupportFragmentManager().beginTransaction().replace(R.id.mainFrame, new MonitorFragment()).commit();
 
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
 
     @Override
     public void onFragmentInteraction(Uri uri) {
     }
+
 }
