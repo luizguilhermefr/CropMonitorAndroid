@@ -44,6 +44,7 @@ public class MonitorFragment extends Fragment {
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                btnStart.setEnabled(false);
                 poll(view);
             }
         });
