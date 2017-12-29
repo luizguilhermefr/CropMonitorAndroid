@@ -97,7 +97,7 @@ public class MonitorFragment extends Fragment {
         Integer sensor1;
         for (; ; ) {
             sensor1 = new Random().nextInt();
-            updateSensor1Ui(String.valueOf(sensor1));
+            updateSensor1Ui(String.valueOf(sensor1) + " V");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
