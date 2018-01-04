@@ -9,5 +9,7 @@
     <string name="start">Start</string>
 
     <string name="device_not_supported">Connection error: device isn\'t supported.</string>
-    <string name="connection_denined">Connection denied. Please, try again.</string>
+    <string name="connection_denied">Connection denied. Please, try again.</string>
+    <string name="connection_successful">Connected successfully.</string>
+    <string name="connection_error">Connection error.</string>
 </resources>

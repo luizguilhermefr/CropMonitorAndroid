@@ -13,7 +13,7 @@ public interface ConnectionInterface {
 
     Intent requestEnablement();
 
-    BroadcastReceiver getStatusReceiver();
+    void connect();
 
-    public IntentFilter getBroadcastFilter();
+    boolean isReady();
 }

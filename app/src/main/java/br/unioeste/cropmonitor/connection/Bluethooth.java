@@ -1,40 +1,45 @@
 package br.unioeste.cropmonitor.connection;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
 import java.io.IOException;
+import java.util.Set;
 
 import br.unioeste.cropmonitor.connection.contracts.ConnectionInterface;
 
 public class Bluethooth implements ConnectionInterface {
 
+    public final String DEVICE_NAME = "LSCBLU";
+
     private BluetoothAdapter adapter;
 
-    private int status = BluetoothAdapter.STATE_OFF;
+    Set<BluetoothDevice> pairedDevices;
 
-    private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                status = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
-                        BluetoothAdapter.ERROR);
+    private boolean isPaired;
+
+    @Override
+    public boolean isReady() {
+        return isEnabled() && isPaired;
+    }
+
+    @Override
+    public void connect() {
+        pairedDevices = adapter.getBondedDevices();
+        for (BluetoothDevice device : pairedDevices) {
+            if (device.getName().equals(DEVICE_NAME)) {
+                isPaired = true;
+                return;
             }
         }
-    };
-
-    public BroadcastReceiver getStatusReceiver() {
-        return statusReceiver;
+        isPaired = false;
     }
 
-    public IntentFilter getBroadcastFilter() {
-        return new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-    }
-
+    @Override
     public void init() throws IOException {
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
@@ -42,10 +47,12 @@ public class Bluethooth implements ConnectionInterface {
         }
     }
 
-    public Intent requestEnablement () {
+    @Override
+    public Intent requestEnablement() {
         return new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
     }
 
+    @Override
     public boolean isEnabled() {
         return adapter.isEnabled();
     }

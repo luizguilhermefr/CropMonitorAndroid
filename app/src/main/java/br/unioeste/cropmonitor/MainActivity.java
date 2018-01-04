@@ -49,13 +49,26 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
         Toast.makeText(context, text, length).show();
     }
 
-    private void onErrorConnection() {
+    private void onUnsupportedDevice(String message) {
+        System.out.println(message);
         CharSequence text = getResources().getString(R.string.device_not_supported);
         generateToast(text, Toast.LENGTH_LONG);
     }
 
-    private void onDeniedConnection() {
-        CharSequence text = getResources().getString(R.string.connection_denined);
+    private void onErrorConnection(String message) {
+        System.out.println(message);
+        CharSequence text = getResources().getString(R.string.connection_error);
+        generateToast(text, Toast.LENGTH_LONG);
+    }
+
+    private void onDeniedConnection(String message) {
+        System.out.println(message);
+        CharSequence text = getResources().getString(R.string.connection_denied);
+        generateToast(text, Toast.LENGTH_LONG);
+    }
+
+    private void onConnected() {
+        CharSequence text = getResources().getString(R.string.connection_successful);
         generateToast(text, Toast.LENGTH_LONG);
     }
 
@@ -63,13 +76,22 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
         connection = new Bluethooth();
         try {
             connection.init();
-            registerReceiver(connection.getStatusReceiver(), connection.getBroadcastFilter());
             if (!connection.isEnabled()) {
                 Intent enableIntent = connection.requestEnablement();
                 startActivityForResult(enableIntent, REQUEST_ENABLE);
             }
+            if (connection.isEnabled()) {
+                connection.connect();
+                if (connection.isReady()) {
+                    onConnected();
+                } else {
+                    onErrorConnection("Connection is not ready.");
+                }
+            } else {
+                onErrorConnection("Connection is not enabled.");
+            }
         } catch (IOException e) {
-            onErrorConnection();
+            onUnsupportedDevice("Initialization thrown IOException.");
             e.printStackTrace();
         }
     }
@@ -77,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == RESULT_CANCELED) {
-            onDeniedConnection();
+            onDeniedConnection("Connection was refused by user.");
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -96,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(connection.getStatusReceiver());
         super.onDestroy();
     }
 
