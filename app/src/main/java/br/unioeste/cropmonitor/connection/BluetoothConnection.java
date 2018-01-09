@@ -10,60 +10,54 @@ import android.content.IntentFilter;
 import java.io.IOException;
 import java.util.Set;
 
-import br.unioeste.cropmonitor.connection.contracts.ConnectionInterface;
-
-public class Bluethooth implements ConnectionInterface {
+public class BluetoothConnection {
 
     private final String DEVICE_NAME = "LSCBLU";
-
+    private final BroadcastReceiver broadcastActionState;
     private BluetoothAdapter adapter;
-
     private boolean isPaired;
-
     private Integer state;
 
-    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+    public BluetoothConnection() {
+        broadcastActionState = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                    state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                }
             }
-        }
-    };
+        };
+    }
 
-    private boolean isOff() {
+    public boolean isOff() {
         return state.equals(BluetoothAdapter.STATE_OFF);
     }
 
-    private boolean isTurningOff() {
+    public boolean isTurningOff() {
         return state.equals(BluetoothAdapter.STATE_TURNING_OFF);
     }
 
-    private boolean isOn() {
+    public boolean isOn() {
         return state.equals(BluetoothAdapter.STATE_ON);
     }
 
-    private boolean isTurningOn() {
+    public boolean isTurningOn() {
         return state.equals(BluetoothAdapter.STATE_TURNING_ON);
     }
 
-    @Override
-    public boolean isReady() {
-        return isEnabled() && isPaired;
+    public boolean isPaired() {
+        return isPaired;
     }
 
-    @Override
-    public BroadcastReceiver getBroadcastReceiver() {
-        return broadcastReceiver;
+    public BroadcastReceiver getBroadcastReceiverForActionState() {
+        return broadcastActionState;
     }
 
-    @Override
-    public IntentFilter getIntentFilter() {
+    public IntentFilter getIntentFilterForActionState() {
         return new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
     }
 
-    @Override
-    public void connect() {
+    public void attemptPair() {
         Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
         for (BluetoothDevice device : pairedDevices) {
             if (device.getName().equals(DEVICE_NAME)) {
@@ -74,22 +68,18 @@ public class Bluethooth implements ConnectionInterface {
         isPaired = false;
     }
 
-    @Override
-    public void init() throws IOException {
+    public void initializeAdapter() throws IOException {
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
-            throw new IOException("Device doesn't support Bluethooth connection.");
+            throw new IOException("Device doesn't support BluetoothConnection connection.");
         }
     }
 
-    @Override
-    public Intent requestEnablement() {
+    public Intent getIntentForEnabling() {
         return new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
     }
 
-    @Override
     public boolean isEnabled() {
         return adapter.isEnabled();
     }
-
 }

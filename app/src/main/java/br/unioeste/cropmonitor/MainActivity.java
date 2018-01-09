@@ -14,13 +14,14 @@ import android.widget.Toast;
 
 import java.io.IOException;
 
-import br.unioeste.cropmonitor.connection.Bluethooth;
-import br.unioeste.cropmonitor.connection.contracts.ConnectionInterface;
+import br.unioeste.cropmonitor.connection.BluetoothConnection;
 
 public class MainActivity extends AppCompatActivity implements MonitorFragment.OnFragmentInteractionListener {
 
     public final static int REQUEST_ENABLE = 1;
-    ConnectionInterface connection;
+
+    BluetoothConnection bluetoothConnection;
+
     private OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new OnNavigationItemSelectedListener() {
 
@@ -71,17 +72,23 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
     }
 
     private void connect() {
-        connection = new Bluethooth();
+        bluetoothConnection = new BluetoothConnection();
+
         try {
-            connection.init();
-            if (!connection.isEnabled()) {
-                Intent enableIntent = connection.requestEnablement();
+            bluetoothConnection.initializeAdapter();
+            registerReceiver(bluetoothConnection.getBroadcastReceiverForActionState(), bluetoothConnection.getIntentFilterForActionState());
+
+            if (!bluetoothConnection.isEnabled()) {
+                Intent enableIntent = bluetoothConnection.getIntentForEnabling();
                 startActivityForResult(enableIntent, REQUEST_ENABLE);
             }
-            registerReceiver(connection.getBroadcastReceiver(), connection.getIntentFilter());
-            if (connection.isEnabled()) {
-                connection.connect();
-                if (connection.isReady()) {
+
+            // onConnected()
+            // onErrorConnection()
+
+            if (bluetoothConnection.isEnabled()) {
+                bluetoothConnection.attemptPair();
+                if (bluetoothConnection.isPaired()) {
                     onConnected();
                 } else {
                     onErrorConnection("Connection is not ready.");
@@ -112,13 +119,14 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
 
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
         connect();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(connection.getBroadcastReceiver());
+        unregisterReceiver(bluetoothConnection.getBroadcastReceiverForActionState());
     }
 
     @Override
