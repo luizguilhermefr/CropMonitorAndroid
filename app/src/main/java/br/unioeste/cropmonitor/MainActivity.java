@@ -19,10 +19,8 @@ import br.unioeste.cropmonitor.connection.contracts.ConnectionInterface;
 
 public class MainActivity extends AppCompatActivity implements MonitorFragment.OnFragmentInteractionListener {
 
-    ConnectionInterface connection;
-
     public final static int REQUEST_ENABLE = 1;
-
+    ConnectionInterface connection;
     private OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new OnNavigationItemSelectedListener() {
 
@@ -80,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
                 Intent enableIntent = connection.requestEnablement();
                 startActivityForResult(enableIntent, REQUEST_ENABLE);
             }
+            registerReceiver(connection.getBroadcastReceiver(), connection.getIntentFilter());
             if (connection.isEnabled()) {
                 connection.connect();
                 if (connection.isReady()) {
@@ -119,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(connection.getBroadcastReceiver());
     }
 
     @Override

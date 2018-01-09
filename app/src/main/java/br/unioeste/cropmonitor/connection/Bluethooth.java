@@ -14,13 +14,38 @@ import br.unioeste.cropmonitor.connection.contracts.ConnectionInterface;
 
 public class Bluethooth implements ConnectionInterface {
 
-    public final String DEVICE_NAME = "LSCBLU";
+    private final String DEVICE_NAME = "LSCBLU";
 
     private BluetoothAdapter adapter;
 
-    Set<BluetoothDevice> pairedDevices;
-
     private boolean isPaired;
+
+    private Integer state;
+
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+            }
+        }
+    };
+
+    private boolean isOff() {
+        return state.equals(BluetoothAdapter.STATE_OFF);
+    }
+
+    private boolean isTurningOff() {
+        return state.equals(BluetoothAdapter.STATE_TURNING_OFF);
+    }
+
+    private boolean isOn() {
+        return state.equals(BluetoothAdapter.STATE_ON);
+    }
+
+    private boolean isTurningOn() {
+        return state.equals(BluetoothAdapter.STATE_TURNING_ON);
+    }
 
     @Override
     public boolean isReady() {
@@ -28,8 +53,18 @@ public class Bluethooth implements ConnectionInterface {
     }
 
     @Override
+    public BroadcastReceiver getBroadcastReceiver() {
+        return broadcastReceiver;
+    }
+
+    @Override
+    public IntentFilter getIntentFilter() {
+        return new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+    }
+
+    @Override
     public void connect() {
-        pairedDevices = adapter.getBondedDevices();
+        Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
         for (BluetoothDevice device : pairedDevices) {
             if (device.getName().equals(DEVICE_NAME)) {
                 isPaired = true;

@@ -16,4 +16,8 @@ public interface ConnectionInterface {
     void connect();
 
     boolean isReady();
+
+    BroadcastReceiver getBroadcastReceiver();
+
+    IntentFilter getIntentFilter();
 }
