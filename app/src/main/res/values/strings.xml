@@ -1,15 +1,16 @@
 <resources>
     <string name="app_name">CropMonitor</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
 
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="sensor1_title">Sensor #1</string>
+    <string name="sensor2_title">Sensor #2</string>
+    <string name="sensor3_title">Sensor #3</string>
+    <string name="sensor4_title">Sensor #4</string>
+
     <string name="start">Start</string>
 
     <string name="device_not_supported">Connection error: device isn\'t supported.</string>
     <string name="connection_denied">Connection denied. Please, try again.</string>
     <string name="connection_successful">Connected successfully.</string>
     <string name="connection_error">Connection error.</string>
+    <string name="disconnecting">Disconnecting...</string>
 </resources>

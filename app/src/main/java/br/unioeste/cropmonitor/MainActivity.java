@@ -29,7 +29,17 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView sensor1Content;
 
+    private TextView sensor2Content;
+
+    private TextView sensor3Content;
+
+    private TextView sensor4Content;
+
     private Handler uiHandler = new Handler();
+
+    private boolean polling = false;
+
+    private Thread pollThread = null;
 
     private void generateToast(CharSequence text, int length) {
         Context context = getApplicationContext();
@@ -59,38 +69,44 @@ public class MainActivity extends AppCompatActivity {
         generateToast(text, Toast.LENGTH_LONG);
     }
 
+    private void onDisconnecting() {
+        CharSequence text = getResources().getString(R.string.disconnecting);
+        generateToast(text, Toast.LENGTH_LONG);
+    }
+
     private void requestBluetoothEnablement() {
         Intent enableIntent = bluetoothConnection.getIntentForEnabling();
         startActivityForResult(enableIntent, REQUEST_ENABLE);
     }
 
+    private void pair() {
+        bluetoothConnection.attemptPair();
+        if (bluetoothConnection.isPaired()) {
+            onConnected();
+        } else {
+            onErrorConnection("Connection is not ready.");
+        }
+    }
+
     private void connect() {
         bluetoothConnection = new BluetoothConnection();
-
         try {
             bluetoothConnection.initializeAdapter();
             registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
             if (!bluetoothConnection.isEnabled()) {
                 requestBluetoothEnablement();
-            }
-
-            // onConnected()
-            // onErrorConnection()
-
-            if (bluetoothConnection.isEnabled()) {
-                bluetoothConnection.attemptPair();
-                if (bluetoothConnection.isPaired()) {
-                    onConnected();
-                } else {
-                    onErrorConnection("Connection is not ready.");
-                }
             } else {
-                onErrorConnection("Connection is not enabled.");
+                pair();
             }
         } catch (IOException e) {
             onUnsupportedDevice("Initialization thrown IOException.");
             e.printStackTrace();
         }
+    }
+
+    private void disconnect() {
+        onDisconnecting();
+        polling = false;
     }
 
     @Override
@@ -107,10 +123,17 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        sensor1Content = findViewById(R.id.sensor1Content);
+        sensor2Content = findViewById(R.id.sensor2Content);
+        sensor3Content = findViewById(R.id.sensor3Content);
+        sensor4Content = findViewById(R.id.sensor4Content);
+
         btnStart = findViewById(R.id.startPollingBtn);
+        btnStart.setEnabled(false);
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                polling = true;
                 btnStart.setEnabled(false);
                 poll();
             }
@@ -126,10 +149,12 @@ public class MainActivity extends AppCompatActivity {
                             //
                             break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
-                            //
+                            disconnect();
+                            btnStart.setEnabled(false);
                             break;
                         case BluetoothAdapter.STATE_ON:
-                            //
+                            pair();
+                            btnStart.setEnabled(bluetoothConnection.isPaired() && !polling);
                             break;
                         case BluetoothAdapter.STATE_TURNING_ON:
                             //
@@ -146,33 +171,38 @@ public class MainActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                updateSensors();
+                Integer sensor1, sensor2, sensor3, sensor4;
+                for (; ; ) {
+                    if (polling) {
+                        sensor1 = new Random().nextInt();
+                        sensor2 = new Random().nextInt();
+                        sensor3 = new Random().nextInt();
+                        sensor4 = new Random().nextInt();
+
+                        updateSensorsUi(String.valueOf(sensor1), String.valueOf(sensor2), String.valueOf(sensor3), String.valueOf(sensor4));
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         };
-        new Thread(runnable).start();
+        pollThread = new Thread(runnable);
+        pollThread.start();
     }
 
-    private void updateSensor1Ui(final String value) {
-        sensor1Content = findViewById(R.id.sensor1Content);
+    private void updateSensorsUi(final String sensor1, final String sensor2, final String sensor3, final String sensor4) {
         uiHandler.post(new Runnable() {
             @Override
             public void run() {
-                sensor1Content.setText(value);
+                sensor1Content.setText(sensor1);
+                sensor2Content.setText(sensor2);
+                sensor3Content.setText(sensor3);
+                sensor4Content.setText(sensor4);
             }
         });
-    }
-
-    private void updateSensors() {
-        Integer sensor1;
-        for (; ; ) {
-            sensor1 = new Random().nextInt();
-            updateSensor1Ui(String.valueOf(sensor1) + " V");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
