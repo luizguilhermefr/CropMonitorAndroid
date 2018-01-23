@@ -1,47 +1,35 @@
 package br.unioeste.cropmonitor;
 
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.BottomNavigationView.OnNavigationItemSelectedListener;
-import android.support.v4.app.FragmentTransaction;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.Random;
 
 import br.unioeste.cropmonitor.connection.BluetoothConnection;
 
-public class MainActivity extends AppCompatActivity implements MonitorFragment.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity {
 
-    public final static int REQUEST_ENABLE = 1;
+    private final static int REQUEST_ENABLE = 1;
 
-    BluetoothConnection bluetoothConnection;
+    private BluetoothConnection bluetoothConnection;
 
-    private OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new OnNavigationItemSelectedListener() {
+    private BroadcastReceiver broadcastActionState;
 
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            switch (item.getItemId()) {
-                case R.id.navigation_home:
-                    ft.replace(R.id.mainFrame, new MonitorFragment()).commit();
-                    return true;
-                case R.id.navigation_dashboard:
-                    System.out.println("not implemented yet.");
-                    return false;
-                case R.id.navigation_notifications:
-                    System.out.println("not implemented yet.");
-                    return false;
-            }
-            return false;
-        }
-    };
+    private Button btnStart;
+
+    private TextView sensor1Content;
+
+    private Handler uiHandler = new Handler();
 
     private void generateToast(CharSequence text, int length) {
         Context context = getApplicationContext();
@@ -71,16 +59,19 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
         generateToast(text, Toast.LENGTH_LONG);
     }
 
+    private void requestBluetoothEnablement() {
+        Intent enableIntent = bluetoothConnection.getIntentForEnabling();
+        startActivityForResult(enableIntent, REQUEST_ENABLE);
+    }
+
     private void connect() {
         bluetoothConnection = new BluetoothConnection();
 
         try {
             bluetoothConnection.initializeAdapter();
-            registerReceiver(bluetoothConnection.getBroadcastReceiverForActionState(), bluetoothConnection.getIntentFilterForActionState());
-
+            registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
             if (!bluetoothConnection.isEnabled()) {
-                Intent enableIntent = bluetoothConnection.getIntentForEnabling();
-                startActivityForResult(enableIntent, REQUEST_ENABLE);
+                requestBluetoothEnablement();
             }
 
             // onConnected()
@@ -113,24 +104,80 @@ public class MainActivity extends AppCompatActivity implements MonitorFragment.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.mainFrame, new MonitorFragment()).commit();
+        btnStart = findViewById(R.id.startPollingBtn);
+        btnStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                btnStart.setEnabled(false);
+                poll();
+            }
+        });
 
-        BottomNavigationView navigation = findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        broadcastActionState = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                    Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                    switch (state) {
+                        case BluetoothAdapter.STATE_OFF:
+                            //
+                            break;
+                        case BluetoothAdapter.STATE_TURNING_OFF:
+                            //
+                            break;
+                        case BluetoothAdapter.STATE_ON:
+                            //
+                            break;
+                        case BluetoothAdapter.STATE_TURNING_ON:
+                            //
+                            break;
+                    }
+                }
+            }
+        };
 
         connect();
+    }
+
+    public void poll() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                updateSensors();
+            }
+        };
+        new Thread(runnable).start();
+    }
+
+    private void updateSensor1Ui(final String value) {
+        sensor1Content = findViewById(R.id.sensor1Content);
+        uiHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sensor1Content.setText(value);
+            }
+        });
+    }
+
+    private void updateSensors() {
+        Integer sensor1;
+        for (; ; ) {
+            sensor1 = new Random().nextInt();
+            updateSensor1Ui(String.valueOf(sensor1) + " V");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(bluetoothConnection.getBroadcastReceiverForActionState());
+        unregisterReceiver(broadcastActionState);
     }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-    }
-
 }
