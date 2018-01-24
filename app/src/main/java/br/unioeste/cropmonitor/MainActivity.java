@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean polling = false;
 
     private Thread pollThread = null;
+
+    private ProgressBar progressBar;
 
     private void generateToast(CharSequence text, int length) {
         Context context = getApplicationContext();
@@ -95,8 +98,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void registerBroadcasters() {
+        registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
+        registerReceiver(broadcastDiscoverability, bluetoothConnection.getIntentFilterForDiscoverability());
+        registerReceiver(broadcastDeviceFound, bluetoothConnection.getIntentFilterForDeviceFound());
+        registerReceiver(broadcastBondState, bluetoothConnection.getIntentFilterForBondState());
+    }
+
+    private void unregisterBroadcasters() {
+        unregisterReceiver(broadcastActionState);
+        unregisterReceiver(broadcastDiscoverability);
+        unregisterReceiver(broadcastDeviceFound);
+        unregisterReceiver(broadcastBondState);
+    }
+
     private void connect() {
         bluetoothConnection = new BluetoothConnection();
+        registerBroadcasters();
         try {
             bluetoothConnection.initializeAdapter();
             if (!bluetoothConnection.isEnabled()) {
@@ -134,6 +152,9 @@ public class MainActivity extends AppCompatActivity {
         sensor3Content = findViewById(R.id.sensor3Content);
         sensor4Content = findViewById(R.id.sensor4Content);
 
+        progressBar = findViewById(R.id.activityIndicator);
+        progressBar.setVisibility(View.INVISIBLE);
+
         btnStart = findViewById(R.id.startPollingBtn);
         btnStart.setEnabled(false);
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -161,9 +182,10 @@ public class MainActivity extends AppCompatActivity {
                         case BluetoothAdapter.STATE_ON:
                             pair();
                             btnStart.setEnabled(bluetoothConnection.isPaired() && !polling);
+                            progressBar.setVisibility(View.INVISIBLE);
                             break;
                         case BluetoothAdapter.STATE_TURNING_ON:
-                            //
+                            progressBar.setVisibility(View.VISIBLE);
                             break;
                     }
                 }
@@ -229,10 +251,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
-        registerReceiver(broadcastDiscoverability, bluetoothConnection.getIntentFilterForDiscoverability());
-        registerReceiver(broadcastDeviceFound, bluetoothConnection.getIntentFilterForDeviceFound());
-        registerReceiver(broadcastBondState, bluetoothConnection.getIntentFilterForBondState());
         connect();
     }
 
@@ -277,9 +295,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(broadcastActionState);
-        unregisterReceiver(broadcastDiscoverability);
-        unregisterReceiver(broadcastDeviceFound);
-        unregisterReceiver(broadcastBondState);
+        unregisterBroadcasters();
     }
 }

@@ -8,6 +8,13 @@
     android:orientation="vertical"
     tools:context="br.unioeste.cropmonitor.MainActivity">
 
+    <ProgressBar
+        android:id="@+id/activityIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminateOnly="true"
+        android:keepScreenOn="true" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
