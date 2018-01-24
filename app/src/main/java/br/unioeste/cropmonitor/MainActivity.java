@@ -1,6 +1,7 @@
 package br.unioeste.cropmonitor;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +25,12 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothConnection bluetoothConnection;
 
     private BroadcastReceiver broadcastActionState;
+
+    private BroadcastReceiver broadcastDiscoverability;
+
+    private BroadcastReceiver broadcastDeviceFound;
+
+    private BroadcastReceiver broadcastBondState;
 
     private Button btnStart;
 
@@ -92,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         bluetoothConnection = new BluetoothConnection();
         try {
             bluetoothConnection.initializeAdapter();
-            registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
             if (!bluetoothConnection.isEnabled()) {
                 requestBluetoothEnablement();
             } else {
@@ -141,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
         broadcastActionState = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
+                final String action = intent.getAction();
                 if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                     Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                     switch (state) {
@@ -164,6 +170,69 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        broadcastDiscoverability = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                if (action.equals(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)) {
+                    Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
+                    switch (state) {
+                        case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
+                            //
+                            break;
+                        case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
+                            //
+                            break;
+                        case BluetoothAdapter.SCAN_MODE_NONE:
+                            //
+                            break;
+                        case BluetoothAdapter.STATE_CONNECTING:
+                            //
+                            break;
+                        case BluetoothAdapter.STATE_CONNECTED:
+                            //
+                            break;
+                    }
+                }
+            }
+        };
+
+        broadcastDeviceFound = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                if (action.equals(BluetoothDevice.ACTION_FOUND)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    // TODO: Something
+                }
+            }
+        };
+
+        broadcastBondState = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    switch (device.getBondState()) {
+                        case BluetoothDevice.BOND_BONDED:
+                            //
+                            break;
+                        case BluetoothDevice.BOND_BONDING:
+                            //
+                            break;
+                        case BluetoothDevice.BOND_NONE:
+                            //
+                            break;
+                    }
+                }
+            }
+        };
+
+        registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
+        registerReceiver(broadcastDiscoverability, bluetoothConnection.getIntentFilterForDiscoverability());
+        registerReceiver(broadcastDeviceFound, bluetoothConnection.getIntentFilterForDeviceFound());
+        registerReceiver(broadcastBondState, bluetoothConnection.getIntentFilterForBondState());
         connect();
     }
 
@@ -209,5 +278,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(broadcastActionState);
+        unregisterReceiver(broadcastDiscoverability);
+        unregisterReceiver(broadcastDeviceFound);
+        unregisterReceiver(broadcastBondState);
     }
 }
