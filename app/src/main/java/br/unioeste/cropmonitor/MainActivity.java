@@ -51,51 +51,20 @@ public class MainActivity extends AppCompatActivity {
 
     private ProgressBar progressBar;
 
-    private void generateToast(CharSequence text, int length) {
+    private void generateToast(String text) {
         Context context = getApplicationContext();
-        Toast.makeText(context, text, length).show();
+        Toast.makeText(context, text, Toast.LENGTH_LONG).show();
     }
 
-    private void onUnsupportedDevice(String message) {
-        System.out.println(message);
-        CharSequence text = getResources().getString(R.string.device_not_supported);
-        generateToast(text, Toast.LENGTH_LONG);
-    }
-
-    private void onErrorConnection(String message) {
-        System.out.println(message);
-        CharSequence text = getResources().getString(R.string.connection_error);
-        generateToast(text, Toast.LENGTH_LONG);
-    }
-
-    private void onDeniedConnection(String message) {
-        System.out.println(message);
-        CharSequence text = getResources().getString(R.string.connection_denied);
-        generateToast(text, Toast.LENGTH_LONG);
-    }
-
-    private void onConnected() {
-        CharSequence text = getResources().getString(R.string.connection_successful);
-        generateToast(text, Toast.LENGTH_LONG);
-    }
-
-    private void onDisconnecting() {
-        CharSequence text = getResources().getString(R.string.disconnecting);
-        generateToast(text, Toast.LENGTH_LONG);
+    private void generateToast(Integer resource) {
+        CharSequence text = getResources().getString(resource);
+        Context context = getApplicationContext();
+        Toast.makeText(context, text, Toast.LENGTH_LONG).show();
     }
 
     private void requestBluetoothEnablement() {
         Intent enableIntent = bluetoothConnection.getIntentForEnabling();
         startActivityForResult(enableIntent, REQUEST_ENABLE);
-    }
-
-    private void pair() {
-        bluetoothConnection.attemptPair();
-        if (bluetoothConnection.isPaired()) {
-            onConnected();
-        } else {
-            onErrorConnection("Connection is not ready.");
-        }
     }
 
     private void registerBroadcasters() {
@@ -112,31 +81,30 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(broadcastBondState);
     }
 
-    private void connect() {
+    private void requestEnablement() {
         bluetoothConnection = new BluetoothConnection();
-        registerBroadcasters();
         try {
-            bluetoothConnection.initializeAdapter();
+            bluetoothConnection.checkAdapter();
+            bluetoothConnection.prepare();
+            registerBroadcasters();
             if (!bluetoothConnection.isEnabled()) {
                 requestBluetoothEnablement();
-            } else {
-                pair();
             }
         } catch (IOException e) {
-            onUnsupportedDevice("Initialization thrown IOException.");
+            generateToast(R.string.device_not_supported);
             e.printStackTrace();
         }
     }
 
     private void disconnect() {
-        onDisconnecting();
+        generateToast(R.string.disconnecting);
         polling = false;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == RESULT_CANCELED) {
-            onDeniedConnection("Connection was refused by user.");
+            generateToast(R.string.authorization_denied);
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -169,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         broadcastActionState = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
-                if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                if (action != null && action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                     Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                     switch (state) {
                         case BluetoothAdapter.STATE_OFF:
@@ -180,12 +148,10 @@ public class MainActivity extends AppCompatActivity {
                             btnStart.setEnabled(false);
                             break;
                         case BluetoothAdapter.STATE_ON:
-                            pair();
-                            btnStart.setEnabled(bluetoothConnection.isPaired() && !polling);
-                            progressBar.setVisibility(View.INVISIBLE);
+                            //
                             break;
                         case BluetoothAdapter.STATE_TURNING_ON:
-                            progressBar.setVisibility(View.VISIBLE);
+                            //
                             break;
                     }
                 }
@@ -196,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
-                if (action.equals(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)) {
+                if (action != null && action.equals(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)) {
                     Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
                     switch (state) {
                         case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
@@ -223,9 +189,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
-                if (action.equals(BluetoothDevice.ACTION_FOUND)) {
+                if (action != null && action.equals(BluetoothDevice.ACTION_FOUND)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    // TODO: Something
+                    generateToast(R.string.attempting_connection);
+                    // TODO: Something with device
+                    progressBar.setVisibility(View.INVISIBLE);
+                    btnStart.setEnabled(true);
                 }
             }
         };
@@ -234,24 +203,25 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
-                if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+                if (action != null && action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     switch (device.getBondState()) {
                         case BluetoothDevice.BOND_BONDED:
-                            //
+                            generateToast(getResources().getString(R.string.bonded_with) + " " + device.getName());
                             break;
                         case BluetoothDevice.BOND_BONDING:
-                            //
+                            progressBar.setVisibility(View.VISIBLE);
                             break;
                         case BluetoothDevice.BOND_NONE:
-                            //
+                            disconnect();
+                            progressBar.setVisibility(View.INVISIBLE);
                             break;
                     }
                 }
             }
         };
 
-        connect();
+        requestEnablement();
     }
 
     public void poll() {
@@ -259,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Integer sensor1, sensor2, sensor3, sensor4;
+                //noinspection InfiniteLoopStatement
                 for (; ; ) {
                     if (polling) {
                         sensor1 = new Random().nextInt();

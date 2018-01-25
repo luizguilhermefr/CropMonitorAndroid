@@ -10,29 +10,25 @@ import android.content.IntentFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Set;
 import java.util.UUID;
 
 public class BluetoothConnection {
 
+    public static final Short MESSAGE_LEN = 8;
     private static final UUID MY_UUID_INSECURE =
             UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
-    private final String DEVICE_NAME = "LSCBLU";
     private final String APP_NAME = "CROPMONITOR_ANDROID";
-    private final Short MESSAGE_LEN = 8;
     private BluetoothAdapter adapter;
 
     private BluetoothDevice pairedDevice;
 
     private UUID pairedDeviceUUID;
 
-    private ConnectedThread connectedThread;
+    private AcceptThread acceptThread = null;
 
-    private boolean isPaired;
+    private ConnectThread connectThread = null;
 
-    public boolean isPaired() {
-        return isPaired;
-    }
+    private ConnectedThread connectedThread = null;
 
     public IntentFilter getIntentFilterForActionState() {
         return new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -50,17 +46,6 @@ public class BluetoothConnection {
         return new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
     }
 
-    public void attemptPair() {
-        Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
-        for (BluetoothDevice device : pairedDevices) {
-            if (device.getName().equals(DEVICE_NAME)) {
-                isPaired = true;
-                return;
-            }
-        }
-        isPaired = false;
-    }
-
     public void discover() {
         if (!adapter.isDiscovering()) {
             adapter.startDiscovery();
@@ -73,7 +58,7 @@ public class BluetoothConnection {
         }
     }
 
-    public void initializeAdapter() throws IOException {
+    public void checkAdapter() throws IOException {
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
             throw new IOException("Device doesn't support BluetoothConnection connection.");
@@ -86,6 +71,22 @@ public class BluetoothConnection {
 
     public boolean isEnabled() {
         return adapter.isEnabled();
+    }
+
+    public synchronized void prepare() {
+        if (connectThread != null) {
+            connectedThread.cancel();
+            connectThread = null;
+        }
+        if (acceptThread == null) {
+            acceptThread = new AcceptThread();
+            acceptThread.start();
+        }
+    }
+
+    public void init(BluetoothDevice device, UUID uuid) {
+        connectThread = new ConnectThread(device, uuid);
+        connectThread.start();
     }
 
     private void onConnected(BluetoothSocket socket) {
@@ -131,7 +132,7 @@ public class BluetoothConnection {
     }
 
     private class ConnectThread extends Thread {
-        private BluetoothSocket socket;
+        private BluetoothSocket socket = null;
 
         public ConnectThread(BluetoothDevice device, UUID uuid) {
             pairedDevice = device;
