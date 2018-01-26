@@ -21,15 +21,9 @@ import br.unioeste.cropmonitor.connection.BluetoothConnection;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final static int REQUEST_ENABLE = 1;
-
     private BluetoothConnection bluetoothConnection;
 
     private BroadcastReceiver broadcastActionState;
-
-    private BroadcastReceiver broadcastDiscoverability;
-
-    private BroadcastReceiver broadcastDeviceFound;
 
     private BroadcastReceiver broadcastBondState;
 
@@ -62,22 +56,13 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(context, text, Toast.LENGTH_LONG).show();
     }
 
-    private void requestBluetoothEnablement() {
-        Intent enableIntent = bluetoothConnection.getIntentForEnabling();
-        startActivityForResult(enableIntent, REQUEST_ENABLE);
-    }
-
     private void registerBroadcasters() {
         registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
-        registerReceiver(broadcastDiscoverability, bluetoothConnection.getIntentFilterForDiscoverability());
-        registerReceiver(broadcastDeviceFound, bluetoothConnection.getIntentFilterForDeviceFound());
         registerReceiver(broadcastBondState, bluetoothConnection.getIntentFilterForBondState());
     }
 
     private void unregisterBroadcasters() {
         unregisterReceiver(broadcastActionState);
-        unregisterReceiver(broadcastDiscoverability);
-        unregisterReceiver(broadcastDeviceFound);
         unregisterReceiver(broadcastBondState);
     }
 
@@ -87,8 +72,10 @@ public class MainActivity extends AppCompatActivity {
             bluetoothConnection.checkAdapter();
             bluetoothConnection.prepare();
             registerBroadcasters();
-            if (!bluetoothConnection.isEnabled()) {
-                requestBluetoothEnablement();
+            bluetoothConnection.enableAdapter();
+            BluetoothDevice bondedDevice = bluetoothConnection.getBondedDevice();
+            if (bondedDevice != null) {
+                onDeviceBonded(bondedDevice);
             }
         } catch (IOException e) {
             generateToast(R.string.device_not_supported);
@@ -99,6 +86,14 @@ public class MainActivity extends AppCompatActivity {
     private void disconnect() {
         generateToast(R.string.disconnecting);
         polling = false;
+    }
+
+    protected void onDeviceBonded(BluetoothDevice device) {
+        generateToast(getResources().getString(R.string.bonded_with) + " " + device.getName());
+        generateToast(R.string.attempting_connection);
+        // TODO: Something with device
+        progressBar.setVisibility(View.INVISIBLE);
+        btnStart.setEnabled(true);
     }
 
     @Override
@@ -158,64 +153,25 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        broadcastDiscoverability = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                final String action = intent.getAction();
-                if (action != null && action.equals(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)) {
-                    Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
-                    switch (state) {
-                        case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
-                            //
-                            break;
-                        case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
-                            //
-                            break;
-                        case BluetoothAdapter.SCAN_MODE_NONE:
-                            //
-                            break;
-                        case BluetoothAdapter.STATE_CONNECTING:
-                            //
-                            break;
-                        case BluetoothAdapter.STATE_CONNECTED:
-                            //
-                            break;
-                    }
-                }
-            }
-        };
-
-        broadcastDeviceFound = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                final String action = intent.getAction();
-                if (action != null && action.equals(BluetoothDevice.ACTION_FOUND)) {
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    generateToast(R.string.attempting_connection);
-                    // TODO: Something with device
-                    progressBar.setVisibility(View.INVISIBLE);
-                    btnStart.setEnabled(true);
-                }
-            }
-        };
-
         broadcastBondState = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
                 if (action != null && action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    switch (device.getBondState()) {
-                        case BluetoothDevice.BOND_BONDED:
-                            generateToast(getResources().getString(R.string.bonded_with) + " " + device.getName());
-                            break;
-                        case BluetoothDevice.BOND_BONDING:
-                            progressBar.setVisibility(View.VISIBLE);
-                            break;
-                        case BluetoothDevice.BOND_NONE:
-                            disconnect();
-                            progressBar.setVisibility(View.INVISIBLE);
-                            break;
+                    if (device.getName().equals(BluetoothConnection.DEVICE_NAME)) {
+                        switch (device.getBondState()) {
+                            case BluetoothDevice.BOND_BONDED:
+                                onDeviceBonded(device);
+                                break;
+                            case BluetoothDevice.BOND_BONDING:
+                                progressBar.setVisibility(View.VISIBLE);
+                                break;
+                            case BluetoothDevice.BOND_NONE:
+                                disconnect();
+                                progressBar.setVisibility(View.INVISIBLE);
+                                break;
+                        }
                     }
                 }
             }

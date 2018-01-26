@@ -10,14 +10,20 @@ import android.content.IntentFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 import java.util.UUID;
 
 public class BluetoothConnection {
 
+    public static final String DEVICE_NAME = "LSCBLU";
+
     public static final Short MESSAGE_LEN = 8;
+
     private static final UUID MY_UUID_INSECURE =
             UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
+
     private final String APP_NAME = "CROPMONITOR_ANDROID";
+
     private BluetoothAdapter adapter;
 
     private BluetoothDevice pairedDevice;
@@ -58,10 +64,28 @@ public class BluetoothConnection {
         }
     }
 
+    public BluetoothDevice getBondedDevice() {
+        Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice device : pairedDevices) {
+                if (device.getName().equals(DEVICE_NAME)) {
+                    return device;
+                }
+            }
+        }
+        return null;
+    }
+
     public void checkAdapter() throws IOException {
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
             throw new IOException("Device doesn't support BluetoothConnection connection.");
+        }
+    }
+
+    public void enableAdapter() {
+        if (!adapter.isEnabled()) {
+            adapter.enable();
         }
     }
 
