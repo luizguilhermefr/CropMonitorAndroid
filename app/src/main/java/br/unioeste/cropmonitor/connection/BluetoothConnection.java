@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
 import android.content.IntentFilter;
 
 import java.io.IOException;
@@ -40,28 +39,8 @@ public class BluetoothConnection {
         return new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
     }
 
-    public IntentFilter getIntentFilterForDiscoverability() {
-        return new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
-    }
-
-    public IntentFilter getIntentFilterForDeviceFound() {
-        return new IntentFilter(BluetoothDevice.ACTION_FOUND);
-    }
-
     public IntentFilter getIntentFilterForBondState() {
         return new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-    }
-
-    public void discover() {
-        if (!adapter.isDiscovering()) {
-            adapter.startDiscovery();
-        }
-    }
-
-    public void stopDiscovery() {
-        if (adapter.isDiscovering()) {
-            adapter.cancelDiscovery();
-        }
     }
 
     public BluetoothDevice getBondedDevice() {
@@ -73,53 +52,64 @@ public class BluetoothConnection {
                 }
             }
         }
+
         return null;
     }
 
-    public void checkAdapter() throws IOException {
+    public BluetoothConnection checkAdapter() throws IOException {
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
             throw new IOException("Device doesn't support BluetoothConnection connection.");
         }
+
+        return this;
     }
 
-    public void enableAdapter() {
+    public BluetoothConnection enableAdapter() {
         if (!adapter.isEnabled()) {
             adapter.enable();
         }
+
+        return this;
     }
 
-    public Intent getIntentForEnabling() {
-        return new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+    public BluetoothConnection setPairedDevice(BluetoothDevice device) {
+        pairedDevice = device;
+
+        return this;
     }
 
-    public boolean isEnabled() {
-        return adapter.isEnabled();
-    }
-
-    public synchronized void prepare() {
+    public synchronized BluetoothConnection prepare() {
         if (connectThread != null) {
-            connectedThread.cancel();
+            connectThread.cancel();
             connectThread = null;
         }
         if (acceptThread == null) {
             acceptThread = new AcceptThread();
             acceptThread.start();
         }
+
+        return this;
     }
 
-    public void init(BluetoothDevice device, UUID uuid) {
-        connectThread = new ConnectThread(device, uuid);
+    public BluetoothConnection init() {
+        connectThread = new ConnectThread(pairedDevice, MY_UUID_INSECURE);
         connectThread.start();
+
+        return this;
     }
 
-    private void onConnected(BluetoothSocket socket) {
+    private BluetoothConnection onConnected(BluetoothSocket socket) {
         connectedThread = new ConnectedThread(socket);
         connectedThread.start();
+
+        return this;
     }
 
-    public void write(byte[] out) {
+    public BluetoothConnection write(byte[] out) {
         connectedThread.write(out);
+
+        return this;
     }
 
     private class AcceptThread extends Thread {

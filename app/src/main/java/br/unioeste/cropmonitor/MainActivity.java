@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDeviceBonded(BluetoothDevice device) {
         generateToast(getResources().getString(R.string.bonded_with) + " " + device.getName());
         generateToast(R.string.attempting_connection);
-        // TODO: Something with device
+        bluetoothConnection.setPairedDevice(device).prepare().init();
         progressBar.setVisibility(View.INVISIBLE);
         btnStart.setEnabled(true);
     }
