@@ -47,6 +47,10 @@ public class BluetoothConnection {
         return new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
     }
 
+    public static Intent getIntentForEnabling() {
+        return new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+    }
+
     public BluetoothDevice getBondedDevice() {
         Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
@@ -67,10 +71,6 @@ public class BluetoothConnection {
         }
 
         return this;
-    }
-
-    public static Intent getIntentForEnabling() {
-        return new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
     }
 
     public boolean isEnabled() {
@@ -125,12 +125,18 @@ public class BluetoothConnection {
     }
 
     public BluetoothConnection disconnect() {
-        acceptThread.cancel();
-        connectThread.cancel();
-        connectedThread.cancel();
-        acceptThread = null;
-        connectThread = null;
-        connectedThread = null;
+        if (acceptThread != null) {
+            acceptThread.cancel();
+            acceptThread = null;
+        }
+        if (connectedThread != null) {
+            connectThread.cancel();
+            connectThread = null;
+        }
+        if (connectedThread != null) {
+            connectedThread.cancel();
+            connectedThread = null;
+        }
 
         return this;
     }
@@ -150,7 +156,6 @@ public class BluetoothConnection {
             BluetoothSocket socket = null;
             try {
                 socket = listenerSocket.accept();
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
