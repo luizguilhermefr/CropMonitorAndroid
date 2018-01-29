@@ -2,7 +2,6 @@ package br.unioeste.cropmonitor.connection;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -21,17 +20,13 @@ public class BluetoothConnection {
     public static final Short MESSAGE_LEN = 8;
 
     private static final UUID MY_UUID_INSECURE =
-            UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
+            UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     private final String APP_NAME = "CROPMONITOR_ANDROID";
 
     private BluetoothAdapter adapter;
 
     private BluetoothDevice pairedDevice;
-
-    private UUID pairedDeviceUUID;
-
-    private AcceptThread acceptThread = null;
 
     private ConnectThread connectThread = null;
 
@@ -47,6 +42,7 @@ public class BluetoothConnection {
         return new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
     }
 
+    @NonNull
     public static Intent getIntentForEnabling() {
         return new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
     }
@@ -96,16 +92,12 @@ public class BluetoothConnection {
             connectThread.cancel();
             connectThread = null;
         }
-        if (acceptThread == null) {
-            acceptThread = new AcceptThread();
-            acceptThread.start();
-        }
 
         return this;
     }
 
     public BluetoothConnection init() {
-        connectThread = new ConnectThread(pairedDevice, MY_UUID_INSECURE);
+        connectThread = new ConnectThread(pairedDevice);
         connectThread.start();
 
         return this;
@@ -125,10 +117,6 @@ public class BluetoothConnection {
     }
 
     public BluetoothConnection disconnect() {
-        if (acceptThread != null) {
-            acceptThread.cancel();
-            acceptThread = null;
-        }
         if (connectedThread != null) {
             connectThread.cancel();
             connectThread = null;
@@ -141,63 +129,31 @@ public class BluetoothConnection {
         return this;
     }
 
-    private class AcceptThread extends Thread {
-        private BluetoothServerSocket listenerSocket = null;
-
-        AcceptThread() {
-            try {
-                listenerSocket = adapter.listenUsingInsecureRfcommWithServiceRecord(APP_NAME, MY_UUID_INSECURE);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public void run() {
-            BluetoothSocket socket = null;
-            try {
-                socket = listenerSocket.accept();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (socket != null) {
-                onConnected(socket);
-            }
-        }
-
-        void cancel() {
-            try {
-                listenerSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private class ConnectThread extends Thread {
         private BluetoothSocket socket = null;
 
-        ConnectThread(BluetoothDevice device, UUID uuid) {
+        ConnectThread(BluetoothDevice device) {
             pairedDevice = device;
-            pairedDeviceUUID = uuid;
         }
 
         public void run() {
             try {
-                socket = pairedDevice.createRfcommSocketToServiceRecord(pairedDeviceUUID);
+                socket = pairedDevice.createRfcommSocketToServiceRecord(MY_UUID_INSECURE);
+                try {
+                    socket.connect();
+                    onConnected(socket);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    try {
+                        socket.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            adapter.cancelDiscovery();
-            try {
-                socket.connect();
-            } catch (IOException e) {
-                try {
-                    socket.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-            onConnected(socket);
+
         }
 
         void cancel() {
@@ -226,13 +182,18 @@ public class BluetoothConnection {
 
         public void run() {
             byte[] buffer = new byte[MESSAGE_LEN];
-            int bytes;
+            int bytesRead;
             while (true) {
                 try {
-                    bytes = iStream.read(buffer);
-                    String incomingMessage = new String(buffer, 0, bytes);
-                    System.out.println(incomingMessage);
-                    // TODO: Enviar mensagem para activity inicial.
+                    if (iStream.available() >= MESSAGE_LEN) {
+                        bytesRead = iStream.read(buffer, 0, MESSAGE_LEN);
+                        if (bytesRead > 0) {
+                            String incomingMessage = new String(buffer, 0, bytesRead);
+                            // TODO: Enviar mensagem para activity inicial.
+                        } else {
+                            // PROTOCOL ERROR!
+                        }
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                     break;

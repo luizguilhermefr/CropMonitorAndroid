@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothConnection = new BluetoothConnection();
         registerBroadcasters();
         try {
-            bluetoothConnection.checkAdapter().prepare();
+            bluetoothConnection.checkAdapter();
             if (!bluetoothConnection.isEnabled()) {
                 Intent enableIntent = BluetoothConnection.getIntentForEnabling();
                 startActivityForResult(enableIntent, 1);
@@ -143,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
                     if (device.getName().equals(BluetoothConnection.DEVICE_NAME)) {
                         switch (device.getBondState()) {
                             case BluetoothDevice.BOND_BONDED:
+                                System.out.println(device.getName());
                                 onDeviceBonded(device);
                                 break;
                             case BluetoothDevice.BOND_BONDING:
