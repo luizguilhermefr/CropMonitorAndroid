@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.annotation.NonNull;
 
@@ -68,7 +69,15 @@ public class BluetoothConnection {
         return this;
     }
 
-    public BluetoothConnection enableAdapter() {
+    public static Intent getIntentForEnabling() {
+        return new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+    }
+
+    public boolean isEnabled() {
+        return adapter.isEnabled();
+    }
+
+    public BluetoothConnection forceEnable() {
         if (!adapter.isEnabled()) {
             adapter.enable();
         }
