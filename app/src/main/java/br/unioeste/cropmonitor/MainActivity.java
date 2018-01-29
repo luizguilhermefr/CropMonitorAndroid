@@ -9,13 +9,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.Random;
 
 import br.unioeste.cropmonitor.connection.BluetoothConnection;
 
@@ -27,8 +25,6 @@ public class MainActivity extends AppCompatActivity {
 
     private BroadcastReceiver broadcastBondState;
 
-    private Button btnStart;
-
     private TextView sensor1Content;
 
     private TextView sensor2Content;
@@ -38,10 +34,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView sensor4Content;
 
     private Handler uiHandler = new Handler();
-
-    private boolean polling = false;
-
-    private Thread pollThread = null;
 
     private ProgressBar progressBar;
 
@@ -57,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerBroadcasters() {
-        registerReceiver(broadcastActionState, bluetoothConnection.getIntentFilterForActionState());
-        registerReceiver(broadcastBondState, bluetoothConnection.getIntentFilterForBondState());
+        registerReceiver(broadcastActionState, BluetoothConnection.getIntentFilterForActionState());
+        registerReceiver(broadcastBondState, BluetoothConnection.getIntentFilterForBondState());
     }
 
     private void unregisterBroadcasters() {
@@ -66,13 +58,11 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(broadcastBondState);
     }
 
-    private void requestEnablement() {
+    private void startBluetoothConnection() {
         bluetoothConnection = new BluetoothConnection();
+        registerBroadcasters();
         try {
-            bluetoothConnection.checkAdapter();
-            bluetoothConnection.prepare();
-            registerBroadcasters();
-            bluetoothConnection.enableAdapter();
+            bluetoothConnection.checkAdapter().prepare().enableAdapter();
             BluetoothDevice bondedDevice = bluetoothConnection.getBondedDevice();
             if (bondedDevice != null) {
                 onDeviceBonded(bondedDevice);
@@ -85,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void disconnect() {
         generateToast(R.string.disconnecting);
-        polling = false;
+        bluetoothConnection.disconnect();
     }
 
     protected void onDeviceBonded(BluetoothDevice device) {
@@ -93,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
         generateToast(R.string.attempting_connection);
         bluetoothConnection.setPairedDevice(device).prepare().init();
         progressBar.setVisibility(View.INVISIBLE);
-        btnStart.setEnabled(true);
     }
 
     @Override
@@ -118,17 +107,6 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.activityIndicator);
         progressBar.setVisibility(View.INVISIBLE);
 
-        btnStart = findViewById(R.id.startPollingBtn);
-        btnStart.setEnabled(false);
-        btnStart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                polling = true;
-                btnStart.setEnabled(false);
-                poll();
-            }
-        });
-
         broadcastActionState = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
@@ -140,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
                             disconnect();
-                            btnStart.setEnabled(false);
                             break;
                         case BluetoothAdapter.STATE_ON:
                             //
@@ -177,34 +154,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        requestEnablement();
-    }
-
-    public void poll() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                Integer sensor1, sensor2, sensor3, sensor4;
-                //noinspection InfiniteLoopStatement
-                for (; ; ) {
-                    if (polling) {
-                        sensor1 = new Random().nextInt();
-                        sensor2 = new Random().nextInt();
-                        sensor3 = new Random().nextInt();
-                        sensor4 = new Random().nextInt();
-
-                        updateSensorsUi(String.valueOf(sensor1), String.valueOf(sensor2), String.valueOf(sensor3), String.valueOf(sensor4));
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        pollThread = new Thread(runnable);
-        pollThread.start();
+        startBluetoothConnection();
     }
 
     private void updateSensorsUi(final String sensor1, final String sensor2, final String sensor3, final String sensor4) {

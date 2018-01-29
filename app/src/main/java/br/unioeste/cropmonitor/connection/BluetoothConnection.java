@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.IntentFilter;
+import android.support.annotation.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,11 +36,13 @@ public class BluetoothConnection {
 
     private ConnectedThread connectedThread = null;
 
-    public IntentFilter getIntentFilterForActionState() {
+    @NonNull
+    public static IntentFilter getIntentFilterForActionState() {
         return new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
     }
 
-    public IntentFilter getIntentFilterForBondState() {
+    @NonNull
+    public static IntentFilter getIntentFilterForBondState() {
         return new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
     }
 
@@ -112,10 +115,21 @@ public class BluetoothConnection {
         return this;
     }
 
+    public BluetoothConnection disconnect() {
+        acceptThread.cancel();
+        connectThread.cancel();
+        connectedThread.cancel();
+        acceptThread = null;
+        connectThread = null;
+        connectedThread = null;
+
+        return this;
+    }
+
     private class AcceptThread extends Thread {
         private BluetoothServerSocket listenerSocket = null;
 
-        public AcceptThread() {
+        AcceptThread() {
             try {
                 listenerSocket = adapter.listenUsingInsecureRfcommWithServiceRecord(APP_NAME, MY_UUID_INSECURE);
             } catch (IOException e) {
@@ -136,7 +150,7 @@ public class BluetoothConnection {
             }
         }
 
-        public void cancel() {
+        void cancel() {
             try {
                 listenerSocket.close();
             } catch (IOException e) {
@@ -148,7 +162,7 @@ public class BluetoothConnection {
     private class ConnectThread extends Thread {
         private BluetoothSocket socket = null;
 
-        public ConnectThread(BluetoothDevice device, UUID uuid) {
+        ConnectThread(BluetoothDevice device, UUID uuid) {
             pairedDevice = device;
             pairedDeviceUUID = uuid;
         }
@@ -172,7 +186,7 @@ public class BluetoothConnection {
             onConnected(socket);
         }
 
-        public void cancel() {
+        void cancel() {
             try {
                 socket.close();
             } catch (IOException e) {
@@ -186,7 +200,7 @@ public class BluetoothConnection {
         private InputStream iStream = null;
         private OutputStream oStream = null;
 
-        public ConnectedThread(BluetoothSocket btSocket) {
+        ConnectedThread(BluetoothSocket btSocket) {
             socket = btSocket;
             try {
                 iStream = socket.getInputStream();
@@ -203,6 +217,7 @@ public class BluetoothConnection {
                 try {
                     bytes = iStream.read(buffer);
                     String incomingMessage = new String(buffer, 0, bytes);
+                    System.out.println(incomingMessage);
                     // TODO: Enviar mensagem para activity inicial.
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -211,7 +226,7 @@ public class BluetoothConnection {
             }
         }
 
-        public void write(byte[] bytes) {
+        void write(byte[] bytes) {
             try {
                 oStream.write(bytes);
             } catch (IOException e) {
@@ -219,7 +234,7 @@ public class BluetoothConnection {
             }
         }
 
-        public void cancel() {
+        void cancel() {
             try {
                 socket.close();
             } catch (IOException e) {
