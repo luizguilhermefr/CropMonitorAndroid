@@ -22,8 +22,6 @@ public class BluetoothConnection {
     private static final UUID MY_UUID_INSECURE =
             UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    private final String APP_NAME = "CROPMONITOR_ANDROID";
-
     private BluetoothAdapter adapter;
 
     private BluetoothDevice pairedDevice;
@@ -110,7 +108,10 @@ public class BluetoothConnection {
         return this;
     }
 
-    public BluetoothConnection write(byte[] out) {
+    public BluetoothConnection write(byte[] out) throws IOException {
+        if (connectedThread == null) {
+            throw new IOException("Device is not connected.");
+        }
         connectedThread.write(out);
 
         return this;

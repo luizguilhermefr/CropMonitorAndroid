@@ -21,4 +21,6 @@
     <string name="target_found">Target device found.</string>
 
     <string name="bonded_with">Bonded with</string>
+
+    <string name="update">Update</string>
 </resources>
