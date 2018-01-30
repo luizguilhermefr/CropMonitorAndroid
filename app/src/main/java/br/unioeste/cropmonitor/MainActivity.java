@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,21 +21,17 @@ import br.unioeste.cropmonitor.connection.BluetoothConnection;
 public class MainActivity extends AppCompatActivity {
 
     private BluetoothConnection bluetoothConnection;
-
     private BroadcastReceiver broadcastActionState;
-
     private BroadcastReceiver broadcastBondState;
-
     private TextView sensor1Content;
-
     private TextView sensor2Content;
-
     private TextView sensor3Content;
-
     private TextView sensor4Content;
-
+    private Button sensor1Update;
+    private Button sensor2Update;
+    private Button sensor3Update;
+    private Button sensor4Update;
     private Handler uiHandler = new Handler();
-
     private ProgressBar progressBar;
 
     private void generateToast(String text) {
@@ -82,11 +79,35 @@ public class MainActivity extends AppCompatActivity {
         bluetoothConnection.disconnect();
     }
 
-    protected void onDeviceBonded(BluetoothDevice device) {
+    private void onDeviceBonded(BluetoothDevice device) {
         generateToast(getResources().getString(R.string.bonded_with) + " " + device.getName());
         generateToast(R.string.attempting_connection);
         bluetoothConnection.setPairedDevice(device).prepare().init();
         progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private void updateSensorsUi(final String sensor1, final String sensor2, final String sensor3, final String sensor4) {
+        uiHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sensor1Content.setText(sensor1);
+                sensor2Content.setText(sensor2);
+                sensor3Content.setText(sensor3);
+                sensor4Content.setText(sensor4);
+            }
+        });
+    }
+
+    private void setUpdatersEnabled(final boolean enabled) {
+        uiHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sensor1Update.setEnabled(enabled);
+                sensor2Update.setEnabled(enabled);
+                sensor3Update.setEnabled(enabled);
+                sensor4Update.setEnabled(enabled);
+            }
+        });
     }
 
     @Override
@@ -107,6 +128,11 @@ public class MainActivity extends AppCompatActivity {
         sensor2Content = findViewById(R.id.sensor2Content);
         sensor3Content = findViewById(R.id.sensor3Content);
         sensor4Content = findViewById(R.id.sensor4Content);
+
+        sensor1Update = findViewById(R.id.sensor1Update);
+        sensor2Update = findViewById(R.id.sensor2Update);
+        sensor3Update = findViewById(R.id.sensor3Update);
+        sensor4Update = findViewById(R.id.sensor4Update);
 
         progressBar = findViewById(R.id.activityIndicator);
         progressBar.setVisibility(View.INVISIBLE);
@@ -160,18 +186,6 @@ public class MainActivity extends AppCompatActivity {
         };
 
         startBluetoothConnection();
-    }
-
-    private void updateSensorsUi(final String sensor1, final String sensor2, final String sensor3, final String sensor4) {
-        uiHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                sensor1Content.setText(sensor1);
-                sensor2Content.setText(sensor2);
-                sensor3Content.setText(sensor3);
-                sensor4Content.setText(sensor4);
-            }
-        });
     }
 
     @Override

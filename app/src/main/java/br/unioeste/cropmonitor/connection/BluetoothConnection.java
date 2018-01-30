@@ -13,21 +13,16 @@ import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
+import br.unioeste.cropmonitor.util.Protocol;
+
 public class BluetoothConnection {
 
     public static final String DEVICE_NAME = "LSCBLU";
-
-    public static final Short MESSAGE_LEN = 8;
-
     private static final UUID MY_UUID_INSECURE =
             UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
     private BluetoothAdapter adapter;
-
     private BluetoothDevice pairedDevice;
-
     private ConnectThread connectThread = null;
-
     private ConnectedThread connectedThread = null;
 
     @NonNull
@@ -182,12 +177,12 @@ public class BluetoothConnection {
         }
 
         public void run() {
-            byte[] buffer = new byte[MESSAGE_LEN];
+            byte[] buffer = new byte[Protocol.MESSAGE_LEN];
             int bytesRead;
             while (true) {
                 try {
-                    if (iStream.available() >= MESSAGE_LEN) {
-                        bytesRead = iStream.read(buffer, 0, MESSAGE_LEN);
+                    if (iStream.available() >= Protocol.MESSAGE_LEN) {
+                        bytesRead = iStream.read(buffer, 0, Protocol.MESSAGE_LEN);
                         if (bytesRead > 0) {
                             String incomingMessage = new String(buffer, 0, bytesRead);
                             // TODO: Enviar mensagem para activity inicial.
