@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothConnection bluetoothConnection;
     private BroadcastReceiver broadcastActionState;
     private BroadcastReceiver broadcastBondState;
+    private BroadcastReceiver broadcastConnectionStatus;
     private TextView sensor1Content;
     private TextView sensor2Content;
     private TextView sensor3Content;
@@ -56,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startBluetoothConnection() {
-        bluetoothConnection = new BluetoothConnection();
+        bluetoothConnection = new BluetoothConnection(MainActivity.this);
         registerBroadcasters();
         try {
             bluetoothConnection.checkAdapter();
@@ -74,15 +75,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void disconnect() {
-        generateToast(R.string.disconnecting);
-        bluetoothConnection.disconnect();
-    }
-
     private void onDeviceBonded(BluetoothDevice device) {
         generateToast(getResources().getString(R.string.bonded_with) + " " + device.getName());
-        generateToast(R.string.attempting_connection);
-        bluetoothConnection.setPairedDevice(device).prepare().init();
+        bluetoothConnection.setPairedDevice(device).initialize();
+    }
+
+    private void onDeviceBonding(BluetoothDevice device) {
+        generateToast(getResources().getString(R.string.bonding_with) + " " + device.getName());
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void onDeviceDisconnected() {
+        generateToast(R.string.disconnecting);
+        bluetoothConnection.disconnect();
+        setUpdatersEnabled(false);
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private void onAttemptingConnection() {
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void onSuccessfulConnection() {
+        setUpdatersEnabled(true);
         progressBar.setVisibility(View.INVISIBLE);
     }
 
@@ -98,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setUpdatersEnabled(final boolean enabled) {
+    private void setUpdatersEnabled(final Boolean enabled) {
         uiHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -143,17 +158,8 @@ public class MainActivity extends AppCompatActivity {
                 if (action != null && action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                     Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                     switch (state) {
-                        case BluetoothAdapter.STATE_OFF:
-                            //
-                            break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
-                            disconnect();
-                            break;
-                        case BluetoothAdapter.STATE_ON:
-                            //
-                            break;
-                        case BluetoothAdapter.STATE_TURNING_ON:
-                            //
+                            onDeviceDisconnected();
                             break;
                     }
                 }
@@ -169,18 +175,38 @@ public class MainActivity extends AppCompatActivity {
                     if (device.getName().equals(BluetoothConnection.DEVICE_NAME)) {
                         switch (device.getBondState()) {
                             case BluetoothDevice.BOND_BONDED:
-                                System.out.println(device.getName());
                                 onDeviceBonded(device);
                                 break;
                             case BluetoothDevice.BOND_BONDING:
-                                progressBar.setVisibility(View.VISIBLE);
+                                onDeviceBonding(device);
                                 break;
                             case BluetoothDevice.BOND_NONE:
-                                disconnect();
-                                progressBar.setVisibility(View.INVISIBLE);
+                                onDeviceDisconnected();
                                 break;
                         }
                     }
+                }
+            }
+        };
+
+        broadcastConnectionStatus = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                if (action != null && action.equals(BluetoothConnection.CONNECT)) {
+                    final Integer content = intent.getIntExtra(BluetoothConnection.STATUS, Integer.MAX_VALUE);
+                    switch (content) {
+                        case BluetoothConnection.STATUS_FAILURE:
+                            //
+                            break;
+                        case BluetoothConnection.STATUS_WORKING:
+                            onAttemptingConnection();
+                            break;
+                        case BluetoothConnection.STATUS_OK:
+                            onSuccessfulConnection();
+                            break;
+                    }
+
                 }
             }
         };

@@ -3,9 +3,11 @@ package br.unioeste.cropmonitor.connection;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,12 +20,23 @@ import br.unioeste.cropmonitor.util.Protocol;
 public class BluetoothConnection {
 
     public static final String DEVICE_NAME = "LSCBLU";
+    public static final String CONNECT = "CONNECT";
+    public static final String CONNECTED = "CONNECTED";
+    public static final String STATUS = "STATUS";
+    public static final int STATUS_FAILURE = -1;
+    public static final int STATUS_WORKING = 1;
+    public static final int STATUS_OK = 2;
     private static final UUID MY_UUID_INSECURE =
             UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private BluetoothAdapter adapter;
     private BluetoothDevice pairedDevice;
     private ConnectThread connectThread = null;
     private ConnectedThread connectedThread = null;
+    private Context context = null;
+
+    public BluetoothConnection(Context ctx) {
+        context = ctx;
+    }
 
     @NonNull
     public static IntentFilter getIntentFilterForActionState() {
@@ -80,25 +93,25 @@ public class BluetoothConnection {
         return this;
     }
 
-    public synchronized BluetoothConnection prepare() {
+    private void killConnectThread() {
         if (connectThread != null) {
             connectThread.cancel();
             connectThread = null;
         }
-
-        return this;
     }
 
-    public BluetoothConnection init() {
-        connectThread = new ConnectThread(pairedDevice);
+    private void killConnectedThread() {
+        if (connectedThread != null) {
+            connectedThread.cancel();
+            connectedThread = null;
+        }
+    }
+
+    public synchronized BluetoothConnection initialize() {
+        disconnect();
+
+        connectThread = new ConnectThread();
         connectThread.start();
-
-        return this;
-    }
-
-    private BluetoothConnection onConnected(BluetoothSocket socket) {
-        connectedThread = new ConnectedThread(socket);
-        connectedThread.start();
 
         return this;
     }
@@ -112,34 +125,50 @@ public class BluetoothConnection {
         return this;
     }
 
-    public BluetoothConnection disconnect() {
-        if (connectedThread != null) {
-            connectThread.cancel();
-            connectThread = null;
-        }
-        if (connectedThread != null) {
-            connectedThread.cancel();
-            connectedThread = null;
-        }
+    public void disconnect() {
+        killConnectThread();
+        killConnectedThread();
+    }
 
-        return this;
+    private void onConnecting() {
+        Intent connectIntent = new Intent(CONNECT);
+        connectIntent.putExtra(STATUS, STATUS_WORKING);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
+    }
+
+    private void onConnected() {
+        Intent connectIntent = new Intent(CONNECT);
+        connectIntent.putExtra(STATUS, STATUS_OK);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
+    }
+
+    private void onCannotConnect() {
+        Intent connectIntent = new Intent(CONNECT);
+        connectIntent.putExtra(STATUS, STATUS_FAILURE);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
+    }
+
+    private void onSocketError() {
+        Intent connectIntent = new Intent(CONNECTED);
+        connectIntent.putExtra(STATUS, STATUS_FAILURE);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
     }
 
     private class ConnectThread extends Thread {
         private BluetoothSocket socket = null;
 
-        ConnectThread(BluetoothDevice device) {
-            pairedDevice = device;
-        }
-
         public void run() {
             try {
+                onConnecting();
                 socket = pairedDevice.createRfcommSocketToServiceRecord(MY_UUID_INSECURE);
                 try {
                     socket.connect();
-                    onConnected(socket);
+                    connectedThread = new ConnectedThread(socket);
+                    if (connectedThread.ready()) {
+                        connectedThread.start();
+                    }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    onCannotConnect();
                     try {
                         socket.close();
                     } catch (IOException e1) {
@@ -147,7 +176,7 @@ public class BluetoothConnection {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                onCannotConnect();
             }
 
         }
@@ -165,15 +194,22 @@ public class BluetoothConnection {
         private final BluetoothSocket socket;
         private InputStream iStream = null;
         private OutputStream oStream = null;
+        private Boolean readyToStart = false;
 
         ConnectedThread(BluetoothSocket btSocket) {
             socket = btSocket;
             try {
                 iStream = socket.getInputStream();
                 oStream = socket.getOutputStream();
+                readyToStart = true;
+                onConnected();
             } catch (IOException e) {
-                e.printStackTrace();
+                onSocketError();
             }
+        }
+
+        Boolean ready() {
+            return readyToStart;
         }
 
         public void run() {
@@ -191,7 +227,7 @@ public class BluetoothConnection {
                         }
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    onSocketError();
                     break;
                 }
             }
@@ -201,7 +237,7 @@ public class BluetoothConnection {
             try {
                 oStream.write(bytes);
             } catch (IOException e) {
-                e.printStackTrace();
+                onSocketError();
             }
         }
 
