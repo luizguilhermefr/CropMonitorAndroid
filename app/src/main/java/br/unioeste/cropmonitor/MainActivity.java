@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -17,13 +18,20 @@ import android.widget.Toast;
 import java.io.IOException;
 
 import br.unioeste.cropmonitor.connection.BluetoothConnection;
+import br.unioeste.cropmonitor.util.Protocol;
+import br.unioeste.cropmonitor.util.exceptions.ProtocolException;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int SENSOR_1 = 0;
+    private static final int SENSOR_2 = 1;
+    private static final int SENSOR_3 = 2;
+    private static final int SENSOR_4 = 3;
     private BluetoothConnection bluetoothConnection;
     private BroadcastReceiver broadcastActionState;
     private BroadcastReceiver broadcastBondState;
     private BroadcastReceiver broadcastConnectionStatus;
+    private BroadcastReceiver broadcastSensorUpdate;
     private TextView sensor1Content;
     private TextView sensor2Content;
     private TextView sensor3Content;
@@ -34,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private Button sensor4Update;
     private Handler uiHandler = new Handler();
     private ProgressBar progressBar;
+    private Integer sensorUpdating = -1;
 
     private void generateToast(String text) {
         Context context = getApplicationContext();
@@ -49,11 +58,15 @@ public class MainActivity extends AppCompatActivity {
     private void registerBroadcasters() {
         registerReceiver(broadcastActionState, BluetoothConnection.getIntentFilterForActionState());
         registerReceiver(broadcastBondState, BluetoothConnection.getIntentFilterForBondState());
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastConnectionStatus, BluetoothConnection.getIntentFilterForConnect());
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastSensorUpdate, BluetoothConnection.getIntentFilterForUpdate());
     }
 
     private void unregisterBroadcasters() {
         unregisterReceiver(broadcastActionState);
         unregisterReceiver(broadcastBondState);
+        unregisterReceiver(broadcastConnectionStatus);
+        unregisterReceiver(broadcastSensorUpdate);
     }
 
     private void startBluetoothConnection() {
@@ -92,6 +105,13 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.INVISIBLE);
     }
 
+    private void onFailureConnection() {
+        generateToast(R.string.connection_error);
+        bluetoothConnection.disconnect();
+        setUpdatersEnabled(false);
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
     private void onAttemptingConnection() {
         progressBar.setVisibility(View.VISIBLE);
     }
@@ -101,14 +121,39 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.INVISIBLE);
     }
 
-    private void updateSensorsUi(final String sensor1, final String sensor2, final String sensor3, final String sensor4) {
+    private void onMessageArrived(String message) {
+        System.out.println(message);
+        System.out.flush();
+        try {
+            Protocol protocolTranscoder = new Protocol(message);
+            if (protocolTranscoder.ok()) {
+                updateSensorUi(sensorUpdating, protocolTranscoder.getValue().toString());
+            } else {
+                // onDeviceRespondedWithError
+            }
+        } catch (ProtocolException e) {
+            // onProtocolError
+        }
+    }
+
+    private void updateSensorUi(final Integer sensor, final String value) {
         uiHandler.post(new Runnable() {
             @Override
             public void run() {
-                sensor1Content.setText(sensor1);
-                sensor2Content.setText(sensor2);
-                sensor3Content.setText(sensor3);
-                sensor4Content.setText(sensor4);
+                switch (sensor) {
+                    case SENSOR_1:
+                        sensor1Content.setText(value);
+                        break;
+                    case SENSOR_2:
+                        sensor2Content.setText(value);
+                        break;
+                    case SENSOR_3:
+                        sensor3Content.setText(value);
+                        break;
+                    case SENSOR_4:
+                        sensor4Content.setText(value);
+                        break;
+                }
             }
         });
     }
@@ -125,12 +170,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == RESULT_CANCELED) {
-            generateToast(R.string.authorization_denied);
+    private void requestSensorUpdate(final Integer sensor) {
+        if (bluetoothConnection != null && bluetoothConnection.connected()) {
+            sensorUpdating = sensor;
+            String read = Protocol.makeReadString(sensor);
+            bluetoothConnection.write(read.getBytes());
         }
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -148,6 +193,34 @@ public class MainActivity extends AppCompatActivity {
         sensor2Update = findViewById(R.id.sensor2Update);
         sensor3Update = findViewById(R.id.sensor3Update);
         sensor4Update = findViewById(R.id.sensor4Update);
+
+        sensor1Update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestSensorUpdate(SENSOR_1);
+            }
+        });
+
+        sensor2Update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestSensorUpdate(SENSOR_2);
+            }
+        });
+
+        sensor3Update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestSensorUpdate(SENSOR_3);
+            }
+        });
+
+        sensor4Update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestSensorUpdate(SENSOR_4);
+            }
+        });
 
         progressBar = findViewById(R.id.activityIndicator);
         progressBar.setVisibility(View.INVISIBLE);
@@ -193,11 +266,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
-                if (action != null && action.equals(BluetoothConnection.CONNECT)) {
+                if (action != null && action.equals(BluetoothConnection.CONNECTION)) {
                     final Integer content = intent.getIntExtra(BluetoothConnection.STATUS, Integer.MAX_VALUE);
                     switch (content) {
                         case BluetoothConnection.STATUS_FAILURE:
-                            //
+                            onFailureConnection();
+                            break;
+                        case BluetoothConnection.STATUS_SOCKET_FAILURE:
+                            onFailureConnection();
                             break;
                         case BluetoothConnection.STATUS_WORKING:
                             onAttemptingConnection();
@@ -206,7 +282,17 @@ public class MainActivity extends AppCompatActivity {
                             onSuccessfulConnection();
                             break;
                     }
+                }
+            }
+        };
 
+        broadcastSensorUpdate = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                if (action != null && action.equals(BluetoothConnection.UPDATE)) {
+                    final String content = intent.getStringExtra(BluetoothConnection.SENSOR);
+                    onMessageArrived(content);
                 }
             }
         };

@@ -13,10 +13,10 @@
     <string name="authorization_denied">Authorize Bluetooth and try again.</string>
     <string name="connection_successful">Connected successfully.</string>
     <string name="connection_error">Connection error.</string>
-    <string name="attempting_connection">Attempting connection...</string>
-    <string name="disconnecting">Disconnecting...</string>
+    <string name="attempting_connection">Attempting connection…</string>
+    <string name="disconnecting">Disconnecting…</string>
 
-    <string name="scanning">Scanning...</string>
+    <string name="scanning">Scanning…</string>
 
     <string name="target_found">Target device found.</string>
 

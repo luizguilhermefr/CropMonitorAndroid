@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import br.unioeste.cropmonitor.util.exceptions.ProtocolException;
 
+@SuppressWarnings({"StringBufferReplaceableByString", "WeakerAccess"})
 public class Protocol {
 
     public static Short MESSAGE_LEN = 8;
@@ -27,7 +28,7 @@ public class Protocol {
     }
 
     @NonNull
-    public static String makeReadString(Integer sensor) throws Exception {
+    public static String makeReadString(Integer sensor) {
         StringBuilder sensorString = new StringBuilder(MESSAGE_LEN);
         sensorString.append(READ);
         sensorString.append(String.format(Locale.ENGLISH, "%0" + SENSOR_LEN + "d", sensor));
@@ -36,7 +37,7 @@ public class Protocol {
     }
 
     @NonNull
-    public static String makeWriteString(Integer sensor, Double value) throws Exception {
+    public static String makeWriteString(Integer sensor, Double value) {
         BigDecimal bg = BigDecimal.valueOf(value).setScale(DECIMAL_LEN, BigDecimal.ROUND_DOWN);
         StringBuilder sensorString = new StringBuilder(MESSAGE_LEN);
         sensorString.append(WRITE);

@@ -17,15 +17,18 @@ import java.util.UUID;
 
 import br.unioeste.cropmonitor.util.Protocol;
 
+@SuppressWarnings("UnusedReturnValue")
 public class BluetoothConnection {
 
     public static final String DEVICE_NAME = "LSCBLU";
-    public static final String CONNECT = "CONNECT";
-    public static final String CONNECTED = "CONNECTED";
+    public static final String CONNECTION = "CONNECTION";
     public static final String STATUS = "STATUS";
     public static final int STATUS_FAILURE = -1;
+    public static final int STATUS_SOCKET_FAILURE = 0;
     public static final int STATUS_WORKING = 1;
     public static final int STATUS_OK = 2;
+    public static final String UPDATE = "UPDATE";
+    public static final String SENSOR = "SENSOR";
     private static final UUID MY_UUID_INSECURE =
             UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private BluetoothAdapter adapter;
@@ -46,6 +49,16 @@ public class BluetoothConnection {
     @NonNull
     public static IntentFilter getIntentFilterForBondState() {
         return new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+    }
+
+    @NonNull
+    public static IntentFilter getIntentFilterForConnect() {
+        return new IntentFilter(CONNECTION);
+    }
+
+    @NonNull
+    public static IntentFilter getIntentFilterForUpdate() {
+        return new IntentFilter(UPDATE);
     }
 
     @NonNull
@@ -116,10 +129,11 @@ public class BluetoothConnection {
         return this;
     }
 
-    public BluetoothConnection write(byte[] out) throws IOException {
-        if (connectedThread == null) {
-            throw new IOException("Device is not connected.");
-        }
+    public Boolean connected() {
+        return (connectedThread != null && connectedThread.isAlive());
+    }
+
+    public BluetoothConnection write(byte[] out) {
         connectedThread.write(out);
 
         return this;
@@ -131,27 +145,33 @@ public class BluetoothConnection {
     }
 
     private void onConnecting() {
-        Intent connectIntent = new Intent(CONNECT);
+        Intent connectIntent = new Intent(CONNECTION);
         connectIntent.putExtra(STATUS, STATUS_WORKING);
         LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
     }
 
     private void onConnected() {
-        Intent connectIntent = new Intent(CONNECT);
+        Intent connectIntent = new Intent(CONNECTION);
         connectIntent.putExtra(STATUS, STATUS_OK);
         LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
     }
 
     private void onCannotConnect() {
-        Intent connectIntent = new Intent(CONNECT);
+        Intent connectIntent = new Intent(CONNECTION);
         connectIntent.putExtra(STATUS, STATUS_FAILURE);
         LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
     }
 
     private void onSocketError() {
-        Intent connectIntent = new Intent(CONNECTED);
-        connectIntent.putExtra(STATUS, STATUS_FAILURE);
+        Intent connectIntent = new Intent(CONNECTION);
+        connectIntent.putExtra(STATUS, STATUS_SOCKET_FAILURE);
         LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
+    }
+
+    private void onMessageArrived(String message) {
+        Intent updateIntent = new Intent(UPDATE);
+        updateIntent.putExtra(SENSOR, message);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(updateIntent);
     }
 
     private class ConnectThread extends Thread {
@@ -221,7 +241,7 @@ public class BluetoothConnection {
                         bytesRead = iStream.read(buffer, 0, Protocol.MESSAGE_LEN);
                         if (bytesRead > 0) {
                             String incomingMessage = new String(buffer, 0, bytesRead);
-                            // TODO: Enviar mensagem para activity inicial.
+                            onMessageArrived(incomingMessage);
                         } else {
                             // PROTOCOL ERROR!
                         }
