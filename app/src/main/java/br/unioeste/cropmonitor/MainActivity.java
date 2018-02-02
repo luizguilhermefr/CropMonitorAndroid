@@ -63,10 +63,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void unregisterBroadcasters() {
-        unregisterReceiver(broadcastActionState);
-        unregisterReceiver(broadcastBondState);
-        unregisterReceiver(broadcastConnectionStatus);
-        unregisterReceiver(broadcastSensorUpdate);
+        try {
+            unregisterReceiver(broadcastActionState);
+            unregisterReceiver(broadcastBondState);
+            unregisterReceiver(broadcastConnectionStatus);
+            unregisterReceiver(broadcastSensorUpdate);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
     }
 
     private void startBluetoothConnection() {
@@ -122,8 +126,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onMessageArrived(String message) {
-        System.out.println(message);
-        System.out.flush();
         try {
             Protocol protocolTranscoder = new Protocol(message);
             if (protocolTranscoder.ok()) {
@@ -133,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (ProtocolException e) {
             // onProtocolError
+            System.out.println("PROTOCOL EXCEPTION -------------------->");
         }
     }
 

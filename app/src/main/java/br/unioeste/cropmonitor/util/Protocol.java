@@ -24,7 +24,8 @@ public class Protocol {
     private BigDecimal value = new BigDecimal(0);
 
     public Protocol(String message) throws ProtocolException {
-        parseMessage(message);
+        parseStatus(message.substring(0, STATUS_LEN));
+        parseValue(message.substring(STATUS_LEN, VALUE_LEN).replaceAll(" ", "0"));
     }
 
     @NonNull
@@ -32,7 +33,7 @@ public class Protocol {
         StringBuilder sensorString = new StringBuilder(MESSAGE_LEN);
         sensorString.append(READ);
         sensorString.append(String.format(Locale.ENGLISH, "%0" + SENSOR_LEN + "d", sensor));
-        sensorString.append(String.format(Locale.ENGLISH, "%" + INTEGER_LEN + "." + DECIMAL_LEN + "f", (float) 0));
+        sensorString.append(String.format(Locale.ENGLISH, "%0" + (INTEGER_LEN + DECIMAL_LEN + 1) + "." + DECIMAL_LEN + "f", (float) 0));
         return sensorString.toString();
     }
 
@@ -42,7 +43,7 @@ public class Protocol {
         StringBuilder sensorString = new StringBuilder(MESSAGE_LEN);
         sensorString.append(WRITE);
         sensorString.append(String.format(Locale.ENGLISH, "%0" + SENSOR_LEN + "d", sensor));
-        sensorString.append(String.format(Locale.ENGLISH, "%" + INTEGER_LEN + "." + DECIMAL_LEN + "f", bg));
+        sensorString.append(String.format(Locale.ENGLISH, "%0" + (INTEGER_LEN + DECIMAL_LEN + 1) + "." + DECIMAL_LEN + "f", bg));
         return sensorString.toString();
     }
 
@@ -58,11 +59,6 @@ public class Protocol {
 
     private void parseValue(String content) {
         value = new BigDecimal(content).setScale(DECIMAL_LEN, BigDecimal.ROUND_DOWN);
-    }
-
-    private void parseMessage(String message) throws ProtocolException {
-        parseStatus(message.substring(0, STATUS_LEN - 1));
-        parseValue(message.substring(STATUS_LEN, VALUE_LEN - 1));
     }
 
     public boolean ok() {
