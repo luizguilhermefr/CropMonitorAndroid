@@ -125,17 +125,22 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.INVISIBLE);
     }
 
+    private void onDeviceRespondedWithError() {
+        generateToast(R.string.sensor_responded_with_error + " " + sensorUpdating);
+    }
+
     private void onMessageArrived(String message) {
         try {
             Protocol protocolTranscoder = new Protocol(message);
             if (protocolTranscoder.ok()) {
                 updateSensorUi(sensorUpdating, protocolTranscoder.getValue().toString());
             } else {
-                // onDeviceRespondedWithError
+                onDeviceRespondedWithError();
             }
         } catch (ProtocolException e) {
             // onProtocolError
-            System.out.println("PROTOCOL EXCEPTION -------------------->");
+            System.out.println("PROTOCOL EXCEPTION --------------------> " + message);
+            System.out.flush();
         }
     }
 

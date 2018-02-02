@@ -24,4 +24,6 @@
     <string name="bonding_with">Bonding with</string>
 
     <string name="update">Update</string>
+
+    <string name="sensor_responded_with_error">Device responded with error on sensor</string>
 </resources>
