@@ -92,6 +92,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void restartBluetoothConnection() {
+        BluetoothDevice bondedDevice = bluetoothConnection.getBondedDevice();
+        if (bondedDevice != null) {
+            onDeviceBonded(bondedDevice);
+        }
+    }
+
     private void onDeviceBonded(BluetoothDevice device) {
         generateToast(getResources().getString(R.string.bonded_with) + " " + device.getName());
         bluetoothConnection.setPairedDevice(device).initialize();
@@ -239,6 +246,9 @@ public class MainActivity extends AppCompatActivity {
                 if (action != null && action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                     Integer state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                     switch (state) {
+                        case BluetoothAdapter.STATE_ON:
+                            restartBluetoothConnection();
+                            break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
                             onDeviceDisconnected();
                             break;
