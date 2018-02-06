@@ -10,14 +10,15 @@ import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import br.unioeste.cropmonitor.connection.BluetoothConnection;
+import br.unioeste.cropmonitor.ui.Sensor;
 import br.unioeste.cropmonitor.util.Protocol;
 import br.unioeste.cropmonitor.util.exceptions.ProtocolException;
 
@@ -32,14 +33,14 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver broadcastBondState;
     private BroadcastReceiver broadcastConnectionStatus;
     private BroadcastReceiver broadcastSensorUpdate;
-    private TextView sensor1Content;
-    private TextView sensor2Content;
-    private TextView sensor3Content;
-    private TextView sensor4Content;
-    private Button sensor1Update;
-    private Button sensor2Update;
-    private Button sensor3Update;
-    private Button sensor4Update;
+
+    private LinearLayout rootLinearLayout;
+
+    private Sensor sensor1;
+    private Sensor sensor2;
+    private Sensor sensor3;
+    private Sensor sensor4;
+
     private Handler uiHandler = new Handler();
     private ProgressBar progressBar;
     private Integer sensorUpdating = -1;
@@ -112,14 +113,12 @@ public class MainActivity extends AppCompatActivity {
     private void onDeviceDisconnected() {
         generateToast(R.string.disconnecting);
         bluetoothConnection.disconnect();
-        setUpdatersEnabled(false);
         progressBar.setVisibility(View.INVISIBLE);
     }
 
     private void onFailureConnection() {
         generateToast(R.string.connection_error);
         bluetoothConnection.disconnect();
-        setUpdatersEnabled(false);
         progressBar.setVisibility(View.INVISIBLE);
     }
 
@@ -128,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onSuccessfulConnection() {
-        setUpdatersEnabled(true);
         progressBar.setVisibility(View.INVISIBLE);
     }
 
@@ -140,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             Protocol protocolTranscoder = new Protocol(message);
             if (protocolTranscoder.ok()) {
-                updateSensorUi(sensorUpdating, protocolTranscoder.getValue().toString());
+                updateSensorUi(sensorUpdating, protocolTranscoder.getValue());
             } else {
                 onDeviceRespondedWithError();
             }
@@ -151,36 +149,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateSensorUi(final Integer sensor, final String value) {
+    private void updateSensorUi(final Integer sensor, final BigDecimal value) {
         uiHandler.post(new Runnable() {
             @Override
             public void run() {
                 switch (sensor) {
                     case SENSOR_1:
-                        sensor1Content.setText(value);
+                        sensor1.setValue(value);
                         break;
                     case SENSOR_2:
-                        sensor2Content.setText(value);
+                        sensor2.setValue(value);
                         break;
                     case SENSOR_3:
-                        sensor3Content.setText(value);
+                        sensor3.setValue(value);
                         break;
                     case SENSOR_4:
-                        sensor4Content.setText(value);
+                        sensor4.setValue(value);
                         break;
                 }
-            }
-        });
-    }
-
-    private void setUpdatersEnabled(final Boolean enabled) {
-        uiHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                sensor1Update.setEnabled(enabled);
-                sensor2Update.setEnabled(enabled);
-                sensor3Update.setEnabled(enabled);
-                sensor4Update.setEnabled(enabled);
             }
         });
     }
@@ -199,43 +185,16 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        sensor1Content = findViewById(R.id.sensor1Content);
-        sensor2Content = findViewById(R.id.sensor2Content);
-        sensor3Content = findViewById(R.id.sensor3Content);
-        sensor4Content = findViewById(R.id.sensor4Content);
+        sensor1 = new Sensor(MainActivity.this, SENSOR_1, getResources().getString(R.string.sensor1_title));
+        sensor2 = new Sensor(MainActivity.this, SENSOR_2, getResources().getString(R.string.sensor2_title));
+        sensor3 = new Sensor(MainActivity.this, SENSOR_3, getResources().getString(R.string.sensor3_title));
+        sensor4 = new Sensor(MainActivity.this, SENSOR_4, getResources().getString(R.string.sensor4_title));
 
-        sensor1Update = findViewById(R.id.sensor1Update);
-        sensor2Update = findViewById(R.id.sensor2Update);
-        sensor3Update = findViewById(R.id.sensor3Update);
-        sensor4Update = findViewById(R.id.sensor4Update);
-
-        sensor1Update.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                requestSensorUpdate(SENSOR_1);
-            }
-        });
-
-        sensor2Update.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                requestSensorUpdate(SENSOR_2);
-            }
-        });
-
-        sensor3Update.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                requestSensorUpdate(SENSOR_3);
-            }
-        });
-
-        sensor4Update.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                requestSensorUpdate(SENSOR_4);
-            }
-        });
+        rootLinearLayout = findViewById(R.id.root);
+        rootLinearLayout.addView(sensor1.getElements());
+        rootLinearLayout.addView(sensor2.getElements());
+        rootLinearLayout.addView(sensor3.getElements());
+        rootLinearLayout.addView(sensor4.getElements());
 
         progressBar = findViewById(R.id.activityIndicator);
         progressBar.setVisibility(View.INVISIBLE);
