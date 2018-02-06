@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -39,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Sensor> sensors;
 
-    private Handler uiHandler = new Handler();
     private ProgressBar progressBar;
     private Integer sensorUpdating = -1;
 

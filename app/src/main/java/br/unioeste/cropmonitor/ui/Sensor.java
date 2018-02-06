@@ -10,28 +10,42 @@ import android.widget.TextView;
 
 import java.math.BigDecimal;
 
+import br.unioeste.cropmonitor.util.Protocol;
+
 public class Sensor {
 
+    private static final Integer LOWER_VOLTAGE = 0;
+    private static final Integer HIGHER_VOLTAGE = 5;
     private String name;
-
     private Integer id;
-
     private BigDecimal value;
-
     private Context context;
-
     private LinearLayout linearLayout;
-
     private TextView sensorTitle;
-
     private TextView sensorContent;
-
     private Handler uiHandler;
+    private BigDecimal lowerThreshold;
+    private BigDecimal upperThreshold;
+    private BigDecimal lowestValue = new BigDecimal(Integer.MAX_VALUE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
+    private BigDecimal highestValue = new BigDecimal(Integer.MIN_VALUE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
 
     public Sensor(Context context, Integer id, String name) {
         this.id = id;
         this.name = name;
         this.context = context;
+        this.uiHandler = new Handler();
+        this.lowerThreshold = new BigDecimal(LOWER_VOLTAGE);
+        this.upperThreshold = new BigDecimal(HIGHER_VOLTAGE);
+        buildElements();
+    }
+
+    public Sensor(Context context, Integer id, String name, BigDecimal lowerThreshold, BigDecimal upperThreshold) {
+        this.id = id;
+        this.name = name;
+        this.context = context;
+        this.lowerThreshold = lowerThreshold;
+        this.upperThreshold = upperThreshold;
+        this.uiHandler = new Handler();
         buildElements();
     }
 
@@ -69,7 +83,7 @@ public class Sensor {
     }
 
     public Sensor setName(String newName) {
-        this.name = newName;
+        name = newName;
 
         uiHandler.post(new Runnable() {
             @Override
@@ -82,7 +96,13 @@ public class Sensor {
     }
 
     public Sensor setValue(BigDecimal newValue) {
-        this.value = newValue;
+        value = newValue;
+        if (value.doubleValue() > highestValue.doubleValue()) {
+            highestValue = value;
+        }
+        if (value.doubleValue() < lowestValue.doubleValue()) {
+            lowestValue = value;
+        }
 
         uiHandler.post(new Runnable() {
             @Override
@@ -90,6 +110,26 @@ public class Sensor {
                 sensorContent.setText(String.valueOf(value));
             }
         });
+
+        return this;
+    }
+
+    public BigDecimal getLowerThreshold() {
+        return lowerThreshold;
+    }
+
+    public Sensor setLowerThreshold(BigDecimal newValue) {
+        lowerThreshold = newValue;
+
+        return this;
+    }
+
+    public BigDecimal getUpperThreshold() {
+        return upperThreshold;
+    }
+
+    public Sensor setUpperThreshold(BigDecimal newValue) {
+        upperThreshold = newValue;
 
         return this;
     }
