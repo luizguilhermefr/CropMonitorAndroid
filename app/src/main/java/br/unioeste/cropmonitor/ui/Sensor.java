@@ -1,6 +1,7 @@
 package br.unioeste.cropmonitor.ui;
 
 import android.content.Context;
+import android.os.Handler;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -25,11 +26,17 @@ public class Sensor {
 
     private TextView sensorContent;
 
+    private Handler uiHandler;
+
     public Sensor(Context context, Integer id, String name) {
         this.id = id;
         this.name = name;
         this.context = context;
         buildElements();
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     private void buildElements() {
@@ -61,16 +68,28 @@ public class Sensor {
         return linearLayout;
     }
 
-    public Sensor setName(String name) {
-        this.name = name;
-        this.sensorTitle.setText(name);
+    public Sensor setName(String newName) {
+        this.name = newName;
+
+        uiHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sensorTitle.setText(name);
+            }
+        });
 
         return this;
     }
 
-    public Sensor setValue(BigDecimal value) {
-        this.value = value;
-        this.sensorContent.setText(String.valueOf(value));
+    public Sensor setValue(BigDecimal newValue) {
+        this.value = newValue;
+
+        uiHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sensorContent.setText(String.valueOf(value));
+            }
+        });
 
         return this;
     }

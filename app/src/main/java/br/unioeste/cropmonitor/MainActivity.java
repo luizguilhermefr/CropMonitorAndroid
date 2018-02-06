@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 import br.unioeste.cropmonitor.connection.BluetoothConnection;
 import br.unioeste.cropmonitor.ui.Sensor;
@@ -36,10 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private LinearLayout rootLinearLayout;
 
-    private Sensor sensor1;
-    private Sensor sensor2;
-    private Sensor sensor3;
-    private Sensor sensor4;
+    private ArrayList<Sensor> sensors;
 
     private Handler uiHandler = new Handler();
     private ProgressBar progressBar;
@@ -149,26 +147,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateSensorUi(final Integer sensor, final BigDecimal value) {
-        uiHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                switch (sensor) {
-                    case SENSOR_1:
-                        sensor1.setValue(value);
-                        break;
-                    case SENSOR_2:
-                        sensor2.setValue(value);
-                        break;
-                    case SENSOR_3:
-                        sensor3.setValue(value);
-                        break;
-                    case SENSOR_4:
-                        sensor4.setValue(value);
-                        break;
-                }
+    private void updateSensorUi(final Integer sensorId, final BigDecimal value) {
+        for (Integer i = 0; i < sensors.size(); i++) {
+            Sensor sensor = sensors.get(i);
+            if (sensor.getId().equals(sensorId)) {
+                sensor.setValue(value);
             }
-        });
+        }
     }
 
     private void requestSensorUpdate(final Integer sensor) {
@@ -185,16 +170,16 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        sensor1 = new Sensor(MainActivity.this, SENSOR_1, getResources().getString(R.string.sensor1_title));
-        sensor2 = new Sensor(MainActivity.this, SENSOR_2, getResources().getString(R.string.sensor2_title));
-        sensor3 = new Sensor(MainActivity.this, SENSOR_3, getResources().getString(R.string.sensor3_title));
-        sensor4 = new Sensor(MainActivity.this, SENSOR_4, getResources().getString(R.string.sensor4_title));
+        sensors.add(new Sensor(MainActivity.this, SENSOR_1, getResources().getString(R.string.sensor1_title)));
+        sensors.add(new Sensor(MainActivity.this, SENSOR_2, getResources().getString(R.string.sensor2_title)));
+        sensors.add(new Sensor(MainActivity.this, SENSOR_3, getResources().getString(R.string.sensor3_title)));
+        sensors.add(new Sensor(MainActivity.this, SENSOR_4, getResources().getString(R.string.sensor4_title)));
 
         rootLinearLayout = findViewById(R.id.root);
-        rootLinearLayout.addView(sensor1.getElements());
-        rootLinearLayout.addView(sensor2.getElements());
-        rootLinearLayout.addView(sensor3.getElements());
-        rootLinearLayout.addView(sensor4.getElements());
+
+        for (Integer i = 0; i < sensors.size(); i++) {
+            rootLinearLayout.addView(sensors.get(i).getElements());
+        }
 
         progressBar = findViewById(R.id.activityIndicator);
         progressBar.setVisibility(View.INVISIBLE);
