@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -40,6 +43,24 @@ public class MainActivity extends AppCompatActivity {
 
     private ProgressBar progressBar;
     private Integer sensorUpdating = -1;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.preferences:
+                break;
+        }
+        return true;
+    }
+
 
     private void generateToast(String text) {
         Context context = getApplicationContext();
@@ -167,6 +188,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
+        sensors = new ArrayList<>();
 
         sensors.add(new Sensor(MainActivity.this, SENSOR_1, getResources().getString(R.string.sensor1_title)));
         sensors.add(new Sensor(MainActivity.this, SENSOR_2, getResources().getString(R.string.sensor2_title)));
