@@ -8,9 +8,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -37,29 +34,9 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver broadcastConnectionStatus;
     private BroadcastReceiver broadcastSensorUpdate;
 
-    private LinearLayout rootLinearLayout;
-
     private ArrayList<Sensor> sensors;
 
     private ProgressBar progressBar;
-    private Integer sensorUpdating = -1;
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
-
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.preferences:
-                break;
-        }
-        return true;
-    }
 
 
     private void generateToast(String text) {
@@ -148,14 +125,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onDeviceRespondedWithError() {
-        generateToast(R.string.sensor_responded_with_error + " " + sensorUpdating);
+        generateToast(R.string.sensor_responded_with_error);
     }
 
     private void onMessageArrived(String message) {
         try {
             Protocol protocolTranscoder = new Protocol(message);
             if (protocolTranscoder.ok()) {
-                updateSensorUi(sensorUpdating, protocolTranscoder.getValue());
+                updateSensorUi(SENSOR_1, protocolTranscoder.getValue());
             } else {
                 onDeviceRespondedWithError();
             }
@@ -175,14 +152,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void requestSensorUpdate(final Integer sensor) {
-        if (bluetoothConnection != null && bluetoothConnection.connected()) {
-            sensorUpdating = sensor;
-            String read = Protocol.makeReadString(sensor);
-            bluetoothConnection.write(read.getBytes());
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -196,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
         sensors.add(new Sensor(MainActivity.this, SENSOR_3, getResources().getString(R.string.sensor3_title)));
         sensors.add(new Sensor(MainActivity.this, SENSOR_4, getResources().getString(R.string.sensor4_title)));
 
-        rootLinearLayout = findViewById(R.id.root);
+        LinearLayout rootLinearLayout = findViewById(R.id.root);
 
         for (Integer i = 0; i < sensors.size(); i++) {
             rootLinearLayout.addView(sensors.get(i).getElements());
