@@ -1,7 +1,8 @@
 package br.unioeste.cropmonitor.ui;
 
+import android.app.AlertDialog;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.view.Gravity;
 import android.view.View;
@@ -57,6 +58,24 @@ public class Sensor {
         return id;
     }
 
+    private void showDialogForLowerThreshold() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(R.string.lower_threshold)
+                .setIcon(R.drawable.ic_settings_black_24dp)
+                .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // FIRE ZE MISSILES!
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User cancelled the dialog
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     private void buildElements() {
         linearLayout = new LinearLayout(context);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -82,8 +101,13 @@ public class Sensor {
         settingsButton.setGravity(Gravity.CENTER);
         settingsButton.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
         settingsButton.setTextSize(18);
-        Drawable img = context.getResources().getDrawable(R.drawable.ic_settings_black_24dp);
-        settingsButton.setCompoundDrawablesWithIntrinsicBounds(img, null, null, null);
+        settingsButton.setCompoundDrawablesWithIntrinsicBounds(context.getResources().getDrawable(R.drawable.ic_settings_black_24dp), null, null, null);
+        settingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogForLowerThreshold();
+            }
+        });
 
         linearLayout.addView(sensorTitle);
         linearLayout.addView(sensorContent);
