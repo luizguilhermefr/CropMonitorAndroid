@@ -1,15 +1,18 @@
 package br.unioeste.cropmonitor.ui;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
 import java.math.BigDecimal;
 
+import br.unioeste.cropmonitor.R;
 import br.unioeste.cropmonitor.util.Protocol;
 
 public class Sensor {
@@ -23,6 +26,7 @@ public class Sensor {
     private LinearLayout linearLayout;
     private TextView sensorTitle;
     private TextView sensorContent;
+    private Button settingsButton;
     private Handler uiHandler;
     private BigDecimal lowerThreshold;
     private BigDecimal upperThreshold;
@@ -74,8 +78,16 @@ public class Sensor {
         sensorContent.setTextSize(18);
         sensorContent.setText("-");
 
+        settingsButton = new Button(context);
+        settingsButton.setGravity(Gravity.CENTER);
+        settingsButton.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
+        settingsButton.setTextSize(18);
+        Drawable img = context.getResources().getDrawable(R.drawable.ic_settings_black_24dp);
+        settingsButton.setCompoundDrawablesWithIntrinsicBounds(img, null, null, null);
+
         linearLayout.addView(sensorTitle);
         linearLayout.addView(sensorContent);
+        linearLayout.addView(settingsButton);
     }
 
     public LinearLayout getElements() {
