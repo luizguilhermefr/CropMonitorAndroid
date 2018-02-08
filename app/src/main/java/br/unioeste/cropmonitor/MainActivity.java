@@ -160,10 +160,10 @@ public class MainActivity extends AppCompatActivity {
 
         sensors = new ArrayList<>();
 
-        sensors.add(new Sensor(MainActivity.this, SENSOR_1, getResources().getString(R.string.sensor1_title)));
-        sensors.add(new Sensor(MainActivity.this, SENSOR_2, getResources().getString(R.string.sensor2_title)));
-        sensors.add(new Sensor(MainActivity.this, SENSOR_3, getResources().getString(R.string.sensor3_title)));
-        sensors.add(new Sensor(MainActivity.this, SENSOR_4, getResources().getString(R.string.sensor4_title)));
+        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_1, getResources().getString(R.string.sensor1_title)));
+        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_2, getResources().getString(R.string.sensor2_title)));
+        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_3, getResources().getString(R.string.sensor3_title)));
+        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_4, getResources().getString(R.string.sensor4_title)));
 
         LinearLayout rootLinearLayout = findViewById(R.id.root);
 

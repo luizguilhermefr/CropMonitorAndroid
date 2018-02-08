@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <resources>
-    <string name="app_name">CropMonitor</string>
+    <string name="action_thresholds">Action Thresholds</string>
+    <string name="app_name" translatable="false">CropMonitor</string>
     <string name="attempting_connection">Attempting connection…</string>
     <string name="authorization_denied">Authorize Bluetooth and try again.</string>
     <string name="bonded_with">Bonded with</string>
@@ -15,10 +16,10 @@
     <string name="lower_threshold">Lower Threshold</string>
     <string name="preferences">Preferences</string>
     <string name="scanning">Scanning…</string>
-    <string name="sensor1_title">Sensor #1</string>
-    <string name="sensor2_title">Sensor #2</string>
-    <string name="sensor3_title">Sensor #3</string>
-    <string name="sensor4_title">Sensor #4</string>
+    <string name="sensor1_title" translatable="false">Sensor #1</string>
+    <string name="sensor2_title" translatable="false">Sensor #2</string>
+    <string name="sensor3_title" translatable="false">Sensor #3</string>
+    <string name="sensor4_title" translatable="false">Sensor #4</string>
     <string name="sensor_responded_with_error">Device responded with error on sensor</string>
     <string name="start">Start</string>
     <string name="target_found">Target device found.</string>

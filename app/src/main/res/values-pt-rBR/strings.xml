@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_thresholds">Limiares de Ação</string>
+    <string name="attempting_connection">Obtendo conexão</string>
+    <string name="authorization_denied">Autorização negada</string>
+    <string name="bonded_with">Pareado com</string>
+    <string name="bonding_with">Pareando com</string>
+    <string name="cancel">Cancelar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="connection_successful">Conectado com sucesso</string>
+    <string name="connection_denied">Conexão negada. Tente novamente.</string>
+    <string name="device_not_supported">Erro de conexão: o dispositivo não é suportado.</string>
+    <string name="connection_error">Erro de conexão.</string>
+    <string name="sensor_responded_with_error">Dispositivo respondeu com erro no sensor.</string>
+    <string name="disconnecting">Desconectando…</string>
+    <string name="lower_threshold">Limiar Inferior</string>
+    <string name="preferences">Opções</string>
+    <string name="scanning">Buscando…</string>
+    <string name="start">Iniciar</string>
+    <string name="target_found">Dispositivo encontrado.</string>
+    <string name="update">Atualizar</string>
+</resources>

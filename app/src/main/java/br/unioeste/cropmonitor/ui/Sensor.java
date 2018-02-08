@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Handler;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -24,6 +25,7 @@ public class Sensor {
     private Integer id;
     private BigDecimal value;
     private Context context;
+    private LayoutInflater inflater;
     private LinearLayout linearLayout;
     private TextView sensorTitle;
     private TextView sensorContent;
@@ -34,23 +36,25 @@ public class Sensor {
     private BigDecimal lowestValue = new BigDecimal(Integer.MAX_VALUE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
     private BigDecimal highestValue = new BigDecimal(Integer.MIN_VALUE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
 
-    public Sensor(Context context, Integer id, String name) {
+    public Sensor(Context context, LayoutInflater inflater, Integer id, String name) {
         this.id = id;
         this.name = name;
         this.context = context;
         this.uiHandler = new Handler();
         this.lowerThreshold = new BigDecimal(LOWER_VOLTAGE);
         this.upperThreshold = new BigDecimal(HIGHER_VOLTAGE);
+        this.inflater = inflater;
         buildElements();
     }
 
-    public Sensor(Context context, Integer id, String name, BigDecimal lowerThreshold, BigDecimal upperThreshold) {
+    public Sensor(Context context, LayoutInflater inflater, Integer id, String name, BigDecimal lowerThreshold, BigDecimal upperThreshold) {
         this.id = id;
         this.name = name;
         this.context = context;
         this.lowerThreshold = lowerThreshold;
         this.upperThreshold = upperThreshold;
         this.uiHandler = new Handler();
+        this.inflater = inflater;
         buildElements();
     }
 
@@ -60,8 +64,9 @@ public class Sensor {
 
     private void showDialogForLowerThreshold() {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(R.string.lower_threshold)
+        builder.setTitle(R.string.action_thresholds)
                 .setIcon(R.drawable.ic_settings_black_24dp)
+                .setView(inflater.inflate(R.layout.dialog_range, null))
                 .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // FIRE ZE MISSILES!
