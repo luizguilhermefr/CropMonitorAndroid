@@ -1,11 +1,14 @@
 package br.unioeste.cropmonitor;
 
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -21,6 +24,7 @@ import br.unioeste.cropmonitor.connection.BluetoothConnection;
 import br.unioeste.cropmonitor.ui.Sensor;
 import br.unioeste.cropmonitor.util.Protocol;
 import br.unioeste.cropmonitor.util.exceptions.ProtocolException;
+import me.bendik.simplerangeview.SimpleRangeView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,10 +37,9 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver broadcastBondState;
     private BroadcastReceiver broadcastConnectionStatus;
     private BroadcastReceiver broadcastSensorUpdate;
-
     private ArrayList<Sensor> sensors;
-
     private ProgressBar progressBar;
+    private SimpleRangeView thresholdRangeView;
 
 
     private void generateToast(String text) {
@@ -143,12 +146,44 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateSensorUi(final Integer sensorId, final BigDecimal value) {
+    @Nullable
+    private Sensor getSensorById(final Integer sensorId) {
         for (Integer i = 0; i < sensors.size(); i++) {
             Sensor sensor = sensors.get(i);
             if (sensor.getId().equals(sensorId)) {
-                sensor.setValue(value);
+                return sensor;
             }
+        }
+
+        return null;
+    }
+
+    private void updateSensorUi(final Integer sensorId, final BigDecimal value) {
+        Sensor sensor = getSensorById(sensorId);
+        if (sensor != null) {
+            sensor.setValue(value);
+        }
+    }
+
+    private void showDialogForActionThresholds(Integer sensorId) {
+        Sensor sensor = getSensorById(sensorId);
+        if (sensor != null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(getResources().getString(R.string.action_thresholds) + ": " + sensor.getName())
+                    .setIcon(R.drawable.ic_settings_black_24dp)
+                    .setView(getLayoutInflater().inflate(R.layout.dialog_range, null))
+                    .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // FIRE ZE MISSILES!
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User cancelled the dialog
+                        }
+                    });
+            AlertDialog dialog = builder.create();
+            dialog.show();
         }
     }
 
@@ -158,12 +193,37 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        thresholdRangeView = findViewById(R.id.fixed_rangeview);
+
         sensors = new ArrayList<>();
 
-        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_1, getResources().getString(R.string.sensor1_title)));
-        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_2, getResources().getString(R.string.sensor2_title)));
-        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_3, getResources().getString(R.string.sensor3_title)));
-        sensors.add(new Sensor(MainActivity.this, getLayoutInflater(), SENSOR_4, getResources().getString(R.string.sensor4_title)));
+        sensors.add(new Sensor(MainActivity.this, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogForActionThresholds(SENSOR_1);
+            }
+        }, SENSOR_1, getResources().getString(R.string.sensor1_title)));
+
+        sensors.add(new Sensor(MainActivity.this, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogForActionThresholds(SENSOR_2);
+            }
+        }, SENSOR_2, getResources().getString(R.string.sensor2_title)));
+
+        sensors.add(new Sensor(MainActivity.this, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogForActionThresholds(SENSOR_3);
+            }
+        }, SENSOR_3, getResources().getString(R.string.sensor3_title)));
+
+        sensors.add(new Sensor(MainActivity.this, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogForActionThresholds(SENSOR_4);
+            }
+        }, SENSOR_4, getResources().getString(R.string.sensor4_title)));
 
         LinearLayout rootLinearLayout = findViewById(R.id.root);
 
