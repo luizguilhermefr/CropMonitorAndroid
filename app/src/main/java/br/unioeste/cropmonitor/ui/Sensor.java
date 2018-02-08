@@ -3,6 +3,7 @@ package br.unioeste.cropmonitor.ui;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -26,7 +27,9 @@ public class Sensor {
     private BigDecimal value;
     private Context context;
     private LayoutInflater inflater;
-    private LinearLayout linearLayout;
+    private LinearLayout rootLinearLayout;
+    private LinearLayout upperRowLinearLayout;
+    private LinearLayout bottomRowLinearLayout;
     private TextView sensorTitle;
     private TextView sensorContent;
     private Button settingsButton;
@@ -82,15 +85,31 @@ public class Sensor {
     }
 
     private void buildElements() {
-        linearLayout = new LinearLayout(context);
-        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
-        linearLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        rootLinearLayout = new LinearLayout(context);
+        rootLinearLayout.setOrientation(LinearLayout.VERTICAL);
+        LayoutParams rootParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        rootParams.setMargins(10, 10, 10, 10);
+        rootLinearLayout.setLayoutParams(rootParams);
+
+        upperRowLinearLayout = new LinearLayout(context);
+        upperRowLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+        LayoutParams upperParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        upperParams.setMargins(0, 0, 0, 10);
+        upperRowLinearLayout.setLayoutParams(upperParams);
+
+
+        bottomRowLinearLayout = new LinearLayout(context);
+        bottomRowLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+        LayoutParams bottomParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        bottomParams.setMargins(0, 0, 0, 20);
+        bottomRowLinearLayout.setLayoutParams(bottomParams);
 
         sensorTitle = new TextView(context);
         sensorTitle.setGravity(Gravity.CENTER);
         sensorTitle.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
         sensorTitle.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        sensorTitle.setAllCaps(false);
+        sensorTitle.setAllCaps(true);
+        sensorTitle.setTypeface(null, Typeface.BOLD);
         sensorTitle.setTextSize(18);
         sensorTitle.setText(name);
 
@@ -104,6 +123,7 @@ public class Sensor {
 
         settingsButton = new Button(context);
         settingsButton.setGravity(Gravity.CENTER);
+        settingsButton.setText(R.string.edit);
         settingsButton.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
         settingsButton.setTextSize(18);
         settingsButton.setCompoundDrawablesWithIntrinsicBounds(context.getResources().getDrawable(R.drawable.ic_settings_black_24dp), null, null, null);
@@ -114,13 +134,17 @@ public class Sensor {
             }
         });
 
-        linearLayout.addView(sensorTitle);
-        linearLayout.addView(sensorContent);
-        linearLayout.addView(settingsButton);
+        upperRowLinearLayout.addView(sensorTitle);
+        upperRowLinearLayout.addView(settingsButton);
+
+        bottomRowLinearLayout.addView(sensorContent);
+
+        rootLinearLayout.addView(upperRowLinearLayout);
+        rootLinearLayout.addView(bottomRowLinearLayout);
     }
 
     public LinearLayout getElements() {
-        return linearLayout;
+        return rootLinearLayout;
     }
 
     public Sensor setName(String newName) {

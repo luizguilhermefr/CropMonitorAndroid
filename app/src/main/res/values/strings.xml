@@ -13,6 +13,7 @@
     <string name="connection_successful">Connected successfully.</string>
     <string name="device_not_supported">Connection error: device isn\'t supported.</string>
     <string name="disconnecting">Disconnecting…</string>
+    <string name="edit">Edit</string>
     <string name="lower_threshold">Lower Threshold</string>
     <string name="preferences">Preferences</string>
     <string name="scanning">Scanning…</string>
