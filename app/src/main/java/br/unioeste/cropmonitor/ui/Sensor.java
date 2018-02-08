@@ -40,8 +40,8 @@ public class Sensor {
         this.name = name;
         this.context = context;
         this.uiHandler = new Handler();
-        this.lowerThreshold = new BigDecimal(LOWER_VOLTAGE);
-        this.upperThreshold = new BigDecimal(HIGHER_VOLTAGE);
+        this.lowerThreshold = new BigDecimal(LOWER_VOLTAGE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
+        this.upperThreshold = new BigDecimal(HIGHER_VOLTAGE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
         this.settingsAction = settingsAction;
         buildElements();
     }

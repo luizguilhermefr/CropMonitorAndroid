@@ -7,11 +7,12 @@
         android:id="@+id/fixed_rangeview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:count="10"
-        app:end="6"
-        app:endFixed="7"
+        app:count="20"
+        app:end="20"
+        app:endFixed="20"
+        app:minDistance="1"
         app:showFixedLine="true"
-        app:start="3"
-        app:startFixed="2" />
+        app:start="0"
+        app:startFixed="0" />
 
 </LinearLayout>

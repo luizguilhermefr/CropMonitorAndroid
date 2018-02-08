@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int SENSOR_2 = 1;
     private static final int SENSOR_3 = 2;
     private static final int SENSOR_4 = 3;
+    private static final int THRESHOLD_PRECISION = 4;
     private BluetoothConnection bluetoothConnection;
     private BroadcastReceiver broadcastActionState;
     private BroadcastReceiver broadcastBondState;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Sensor> sensors;
     private ProgressBar progressBar;
     private SimpleRangeView thresholdRangeView;
-
+    private View dialogView;
 
     private void generateToast(String text) {
         Context context = getApplicationContext();
@@ -168,10 +169,14 @@ public class MainActivity extends AppCompatActivity {
     private void showDialogForActionThresholds(Integer sensorId) {
         Sensor sensor = getSensorById(sensorId);
         if (sensor != null) {
+            BigDecimal lower = sensor.getLowerThreshold();
+            BigDecimal upper = sensor.getUpperThreshold();
+            thresholdRangeView.setStart((int) (lower.doubleValue() * THRESHOLD_PRECISION));
+            thresholdRangeView.setEnd((int) (upper.doubleValue() * THRESHOLD_PRECISION));
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(getResources().getString(R.string.action_thresholds) + ": " + sensor.getName())
                     .setIcon(R.drawable.ic_settings_black_24dp)
-                    .setView(getLayoutInflater().inflate(R.layout.dialog_range, null))
+                    .setView(dialogView)
                     .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // FIRE ZE MISSILES!
@@ -193,7 +198,13 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        thresholdRangeView = findViewById(R.id.fixed_rangeview);
+        dialogView = getLayoutInflater().inflate(R.layout.dialog_range, null);
+
+        thresholdRangeView = dialogView.findViewById(R.id.fixed_rangeview);
+
+        LinearLayout rootLinearLayout = findViewById(R.id.root);
+
+        progressBar = findViewById(R.id.activity_indicator);
 
         sensors = new ArrayList<>();
 
@@ -225,13 +236,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }, SENSOR_4, getResources().getString(R.string.sensor4_title)));
 
-        LinearLayout rootLinearLayout = findViewById(R.id.root);
-
         for (Integer i = 0; i < sensors.size(); i++) {
             rootLinearLayout.addView(sensors.get(i).getElements());
         }
-
-        progressBar = findViewById(R.id.activityIndicator);
         progressBar.setVisibility(View.INVISIBLE);
 
         broadcastActionState = new BroadcastReceiver() {

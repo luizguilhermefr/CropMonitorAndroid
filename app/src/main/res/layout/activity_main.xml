@@ -28,7 +28,7 @@
     </ScrollView>
 
     <ProgressBar
-        android:id="@+id/activityIndicator"
+        android:id="@+id/activity_indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:indeterminateOnly="true"
