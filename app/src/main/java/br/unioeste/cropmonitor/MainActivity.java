@@ -120,6 +120,11 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.INVISIBLE);
     }
 
+    private void onProtocolException() {
+        // Restart connection ?
+        generateToast(R.string.protocol_error);
+    }
+
     private void onAttemptingConnection() {
         progressBar.setVisibility(View.VISIBLE);
     }
@@ -134,16 +139,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void onMessageArrived(String message) {
         try {
-            Protocol protocolTranscoder = new Protocol(message);
-            if (protocolTranscoder.ok()) {
-                updateSensorUi(SENSOR_1, protocolTranscoder.getValue());
+            Protocol protocolParser = new Protocol(message);
+            if (protocolParser.ok()) {
+                if (protocolParser.isUpdateSensor()) {
+                    updateSensorUi(protocolParser.getSensor(), protocolParser.getValue());
+                } else if (protocolParser.isUpdateLowerThreshold()) {
+                    // TODO
+                } else if (protocolParser.isUpdateUpperThreshold()) {
+                    // TODO
+                }
             } else {
                 onDeviceRespondedWithError();
             }
         } catch (ProtocolException e) {
-            // onProtocolError
-            System.out.println("PROTOCOL EXCEPTION --------------------> " + message);
-            System.out.flush();
+            onProtocolException();
         }
     }
 
@@ -179,14 +188,10 @@ public class MainActivity extends AppCompatActivity {
                     .setView(dialogView)
                     .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            // FIRE ZE MISSILES!
+                            // TODO
                         }
                     })
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User cancelled the dialog
-                        }
-                    });
+                    .setNegativeButton(R.string.cancel, null);
             AlertDialog dialog = builder.create();
             dialog.show();
         }

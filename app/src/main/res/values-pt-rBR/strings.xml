@@ -15,6 +15,7 @@
     <string name="edit">Editar</string>
     <string name="lower_threshold">Limiar Inferior</string>
     <string name="preferences">Opções</string>
+    <string name="protocol_error">Erro de protocolo. Reinicie o dispositivo.</string>
     <string name="scanning">Buscando…</string>
     <string name="sensor_responded_with_error">Dispositivo respondeu com erro no sensor.</string>
     <string name="start">Iniciar</string>

@@ -243,7 +243,7 @@ public class BluetoothConnection {
                             String incomingMessage = new String(buffer, 0, bytesRead);
                             onMessageArrived(incomingMessage);
                         } else {
-                            // PROTOCOL ERROR!
+                            // Cannot read all bytes?
                         }
                     }
                 } catch (IOException e) {

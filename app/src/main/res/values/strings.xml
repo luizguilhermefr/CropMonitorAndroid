@@ -16,6 +16,7 @@
     <string name="edit">Edit</string>
     <string name="lower_threshold">Lower Threshold</string>
     <string name="preferences">Preferences</string>
+    <string name="protocol_error">Protocol error. Restart the device.</string>
     <string name="scanning">Scanning…</string>
     <string name="sensor1_title" translatable="false">Sensor #1</string>
     <string name="sensor2_title" translatable="false">Sensor #2</string>
