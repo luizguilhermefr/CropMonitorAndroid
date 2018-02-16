@@ -131,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void onSuccessfulConnection() {
         progressBar.setVisibility(View.INVISIBLE);
+        bluetoothConnection.write(Protocol.makeRequestSyncMessage().getBytes());
     }
 
     private void onDeviceRespondedWithError() {
@@ -144,9 +145,11 @@ public class MainActivity extends AppCompatActivity {
                 if (protocolParser.isUpdateSensor()) {
                     updateSensorUi(protocolParser.getSensor(), protocolParser.getValue());
                 } else if (protocolParser.isUpdateLowerThreshold()) {
-//                    // TODO
+                    System.out.println(protocolParser);
+                    System.out.flush();
                 } else if (protocolParser.isUpdateUpperThreshold()) {
-//                    // TODO
+                    System.out.println(protocolParser);
+                    System.out.flush();
                 }
             } else {
                 onDeviceRespondedWithError();

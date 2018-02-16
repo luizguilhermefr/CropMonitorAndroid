@@ -19,6 +19,7 @@ public class Protocol {
     public static Character OP_LOWER_THRESHOLD_UPDATE = 'L';
     public static Character OP_UPPER_THRESHOLD_UPDATE = 'U';
     public static Character OP_SENSOR_UPDATE = 'S';
+    public static Character OP_REFRESH = 'R';
     public static Character OK = '+';
     public static Character ERROR = '-';
 
@@ -44,10 +45,11 @@ public class Protocol {
     | Example:          '-U000000' --> Upper threshold of sensor 00 cannot be updated
     |
     | Outgoing message: [ANY(1)][OP_ID(1)][SENSOR(2)][INTEGER(2)][DECIMAL(2)]
-    | OP_IDS:           L (Lower threshold update), U (Upper threshold update)
+    | OP_IDS:           L (Lower threshold update), U (Upper threshold update), R (Refresh sensors thresholds)
     |
     | Example:          ' L010050' --> Update lower threshold of sensor 01 to 00.50
     | Example:          ' U000350' --> Update upper threshold of sensor 00 to 03.50
+    | Example:          ' R000000' --> Sync all sensors thresholds
     |
     */
 
@@ -59,15 +61,16 @@ public class Protocol {
         parseValue(fragmenter(message, STATUS_LEN + OPERATION_LEN + SENSOR_LEN, INTEGER_LEN + DECIMAL_LEN));
     }
 
-//    @NonNull
-//    public static String makeWriteString(Integer sensor, Double value) {
-//        BigDecimal bg = BigDecimal.valueOf(value).setScale(DECIMAL_LEN, BigDecimal.ROUND_DOWN);
-//        StringBuilder sensorString = new StringBuilder(MESSAGE_LEN);
-//        sensorString.append(WRITE);
-//        sensorString.append(String.format(Locale.ENGLISH, "%0" + SENSOR_LEN + "d", sensor));
-//        sensorString.append(String.format(Locale.ENGLISH, "%0" + (INTEGER_LEN + DECIMAL_LEN + 1) + "." + DECIMAL_LEN + "f", bg));
-//        return sensorString.toString();
-//    }
+    @NonNull
+    public static String makeRequestSyncMessage() {
+        StringBuilder builder = new StringBuilder(MESSAGE_LEN);
+        builder.append(' ');
+        builder.append(OP_REFRESH);
+        for (int i = OPERATION_LEN + 1; i < MESSAGE_LEN; i++) {
+            builder.append('0');
+        }
+        return builder.toString();
+    }
 
     @NonNull
     private String fragmenter(String input, Integer start, Integer length) {
@@ -113,7 +116,7 @@ public class Protocol {
     }
 
     private void parseValue(String fragment) {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder(INTEGER_LEN + DECIMAL_LEN + 1);
         builder.append(fragmenter(fragment, 0, Integer.valueOf(INTEGER_LEN)));
         builder.append('.');
         builder.append(fragmenter(fragment, Integer.valueOf(INTEGER_LEN), Integer.valueOf(DECIMAL_LEN)));
