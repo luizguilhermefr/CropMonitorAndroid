@@ -1,5 +1,7 @@
 package br.unioeste.cropmonitor.util;
 
+import android.support.annotation.NonNull;
+
 import java.math.BigDecimal;
 
 import br.unioeste.cropmonitor.util.exceptions.ProtocolException;
@@ -8,10 +10,10 @@ import br.unioeste.cropmonitor.util.exceptions.ProtocolException;
 public class Protocol {
 
     public static Short MESSAGE_LEN = 8;
-    public static Short SENSOR_LEN = 1;
+    public static Short SENSOR_LEN = 2;
     public static Short INTEGER_LEN = 2;
     public static Short DECIMAL_LEN = 2;
-    public static Short STATUS_LEN = 3;
+    public static Short STATUS_LEN = 1;
     public static Short OPERATION_LEN = 1;
 
     public static Character OP_LOWER_THRESHOLD_UPDATE = 'L';
@@ -26,7 +28,6 @@ public class Protocol {
     private boolean updateSensor = false;
     private BigDecimal value = new BigDecimal(0);
     private Integer sensor;
-
 
     /*
     |--------------------------------------------------------------------------
@@ -50,13 +51,12 @@ public class Protocol {
     |
     */
 
-
     public Protocol(String message) throws ProtocolException {
         parseIntegrity(message);
-        parseStatus(message.substring(0, STATUS_LEN));
-        parseSensor(message.substring(STATUS_LEN, SENSOR_LEN));
-        parseOperation(message.substring(SENSOR_LEN, OPERATION_LEN));
-        parseValue(message.substring(STATUS_LEN, INTEGER_LEN + DECIMAL_LEN + 1).replaceAll(" ", "0"));
+        parseStatus(fragmenter(message, 0, Integer.valueOf(STATUS_LEN)));
+        parseOperation(fragmenter(message, Integer.valueOf(STATUS_LEN), Integer.valueOf(OPERATION_LEN)));
+        parseSensor(fragmenter(message, STATUS_LEN + OPERATION_LEN, Integer.valueOf(SENSOR_LEN)));
+        parseValue(fragmenter(message, STATUS_LEN + OPERATION_LEN + SENSOR_LEN, INTEGER_LEN + DECIMAL_LEN));
     }
 
 //    @NonNull
@@ -68,6 +68,11 @@ public class Protocol {
 //        sensorString.append(String.format(Locale.ENGLISH, "%0" + (INTEGER_LEN + DECIMAL_LEN + 1) + "." + DECIMAL_LEN + "f", bg));
 //        return sensorString.toString();
 //    }
+
+    @NonNull
+    private String fragmenter(String input, Integer start, Integer length) {
+        return input.substring(start, Math.min(start + length, MESSAGE_LEN));
+    }
 
     public void parseIntegrity(String message) throws ProtocolException {
         if (message.length() != MESSAGE_LEN) {
@@ -90,7 +95,7 @@ public class Protocol {
         try {
             sensor = Integer.valueOf(fragment);
         } catch (NumberFormatException e) {
-            throw new ProtocolException("Invalid sensor.");
+            throw new ProtocolException("Invalid sensor: " + fragment);
         }
     }
 
@@ -108,7 +113,11 @@ public class Protocol {
     }
 
     private void parseValue(String fragment) {
-        value = new BigDecimal(fragment).setScale(DECIMAL_LEN, BigDecimal.ROUND_DOWN);
+        StringBuilder builder = new StringBuilder();
+        builder.append(fragmenter(fragment, 0, Integer.valueOf(INTEGER_LEN)));
+        builder.append('.');
+        builder.append(fragmenter(fragment, Integer.valueOf(INTEGER_LEN), Integer.valueOf(DECIMAL_LEN)));
+        value = new BigDecimal(builder.toString()).setScale(DECIMAL_LEN, BigDecimal.ROUND_DOWN);
     }
 
     public boolean ok() {
@@ -133,5 +142,15 @@ public class Protocol {
 
     public boolean isUpdateUpperThreshold() {
         return updateUpperThreshold;
+    }
+
+    public String toString() {
+        return "{\"ok\": " + ok +
+                ", \"value\": " + value.doubleValue() +
+                ", \"is_update_sensor\": " + updateSensor +
+                ", \"is_update_lower_threshold\": " + updateLowerThreshold +
+                ", \"is_update_upper_threshold\": " + updateUpperThreshold +
+                ", \"sensor\": " + sensor +
+                "}";
     }
 }

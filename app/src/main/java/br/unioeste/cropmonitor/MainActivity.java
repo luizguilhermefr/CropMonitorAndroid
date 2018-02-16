@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void onProtocolException() {
         // Restart connection ?
-        generateToast(R.string.protocol_error);
+        // generateToast(R.string.protocol_error);
     }
 
     private void onAttemptingConnection() {
@@ -144,14 +144,15 @@ public class MainActivity extends AppCompatActivity {
                 if (protocolParser.isUpdateSensor()) {
                     updateSensorUi(protocolParser.getSensor(), protocolParser.getValue());
                 } else if (protocolParser.isUpdateLowerThreshold()) {
-                    // TODO
+//                    // TODO
                 } else if (protocolParser.isUpdateUpperThreshold()) {
-                    // TODO
+//                    // TODO
                 }
             } else {
                 onDeviceRespondedWithError();
             }
         } catch (ProtocolException e) {
+            e.printStackTrace();
             onProtocolException();
         }
     }
@@ -177,6 +178,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void showDialogForActionThresholds(Integer sensorId) {
         Sensor sensor = getSensorById(sensorId);
+        dialogView = null;
+        dialogView = getLayoutInflater().inflate(R.layout.dialog_range, null);
+        thresholdRangeView = dialogView.findViewById(R.id.fixed_rangeview);
         if (sensor != null) {
             BigDecimal lower = sensor.getLowerThreshold();
             BigDecimal upper = sensor.getUpperThreshold();
@@ -202,10 +206,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
-        dialogView = getLayoutInflater().inflate(R.layout.dialog_range, null);
-
-        thresholdRangeView = dialogView.findViewById(R.id.fixed_rangeview);
 
         LinearLayout rootLinearLayout = findViewById(R.id.root);
 

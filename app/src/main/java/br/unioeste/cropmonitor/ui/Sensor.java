@@ -168,7 +168,7 @@ public class Sensor {
             public void run() {
                 sensorContent.setText(String.valueOf(value));
                 sensorLowestValue.setText(String.valueOf(lowestValue));
-                sensorHighestValue.setText(String.valueOf(sensorHighestValue));
+                sensorHighestValue.setText(String.valueOf(highestValue));
             }
         });
 
