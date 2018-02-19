@@ -1,6 +1,7 @@
 package br.unioeste.cropmonitor.ui;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -121,6 +122,7 @@ public class Sensor {
         sensorLowestValue.setText("-");
 
         sensorContent = new TextView(context);
+        sensorContent.setTextColor(Color.BLUE);
         sensorContent.setGravity(Gravity.CENTER);
         sensorContent.setLayoutParams(new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
         sensorContent.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -181,11 +183,11 @@ public class Sensor {
                 sensorLowestValue.setText(String.valueOf(lowestValue));
                 sensorHighestValue.setText(String.valueOf(highestValue));
                 if (thisDoubleValue < lowerThresholdDoubleValue) {
-                    // set color
+                    sensorContent.setTextColor(Color.RED);
                 } else if (thisDoubleValue > upperThresholdDoubleValue) {
-                    // set color
+                    sensorContent.setTextColor(Color.RED);
                 } else {
-                    // set color
+                    sensorContent.setTextColor(Color.BLUE);
                 }
             }
         });
@@ -208,6 +210,13 @@ public class Sensor {
         return this;
     }
 
+    public Sensor setLowerThreshold(Integer value) {
+        integerLowerThreshold = value;
+        decimalLowerThreshold = integerToDecimalThreshold(value);
+
+        return this;
+    }
+
     public BigDecimal getDecimalUpperThreshold() {
         return decimalUpperThreshold;
     }
@@ -219,13 +228,6 @@ public class Sensor {
     public Sensor setUpperThreshold(BigDecimal value) {
         integerLowerThreshold = decimalToIntegerThreshold(value);
         decimalUpperThreshold = value;
-
-        return this;
-    }
-
-    public Sensor setLowerThreshold(Integer value) {
-        integerLowerThreshold = value;
-        decimalLowerThreshold = integerToDecimalThreshold(value);
 
         return this;
     }
