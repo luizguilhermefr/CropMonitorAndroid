@@ -32,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int SENSOR_2 = 1;
     private static final int SENSOR_3 = 2;
     private static final int SENSOR_4 = 3;
-    private static final int THRESHOLD_PRECISION = 4;
     private BluetoothConnection bluetoothConnection;
     private BroadcastReceiver broadcastActionState;
     private BroadcastReceiver broadcastBondState;
@@ -122,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void onProtocolException() {
         // Restart connection ?
-        // generateToast(R.string.protocol_error);
     }
 
     private void onAttemptingConnection() {
@@ -145,17 +143,14 @@ public class MainActivity extends AppCompatActivity {
                 if (protocolParser.isUpdateSensor()) {
                     updateSensorUi(protocolParser.getSensor(), protocolParser.getValue());
                 } else if (protocolParser.isUpdateLowerThreshold()) {
-                    System.out.println(protocolParser);
-                    System.out.flush();
+                    updateSensorLowerThreshold(protocolParser.getSensor(), protocolParser.getValue());
                 } else if (protocolParser.isUpdateUpperThreshold()) {
-                    System.out.println(protocolParser);
-                    System.out.flush();
+                    updateSensorUpperThreshold(protocolParser.getSensor(), protocolParser.getValue());
                 }
             } else {
                 onDeviceRespondedWithError();
             }
         } catch (ProtocolException e) {
-            e.printStackTrace();
             onProtocolException();
         }
     }
@@ -179,16 +174,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void updateSensorLowerThreshold(final Integer sensorId, final BigDecimal value) {
+        Sensor sensor = getSensorById(sensorId);
+        if (sensor != null) {
+            sensor.setLowerThreshold(value);
+        }
+    }
+
+    private void updateSensorUpperThreshold(final Integer sensorId, final BigDecimal value) {
+        Sensor sensor = getSensorById(sensorId);
+        if (sensor != null) {
+            sensor.setUpperThreshold(value);
+        }
+    }
+
     private void showDialogForActionThresholds(Integer sensorId) {
         Sensor sensor = getSensorById(sensorId);
         dialogView = null;
         dialogView = getLayoutInflater().inflate(R.layout.dialog_range, null);
         thresholdRangeView = dialogView.findViewById(R.id.fixed_rangeview);
         if (sensor != null) {
-            BigDecimal lower = sensor.getLowerThreshold();
-            BigDecimal upper = sensor.getUpperThreshold();
-            thresholdRangeView.setStart((int) (lower.doubleValue() * THRESHOLD_PRECISION));
-            thresholdRangeView.setEnd((int) (upper.doubleValue() * THRESHOLD_PRECISION));
+            thresholdRangeView.setStart(sensor.getLowerThreshold());
+            thresholdRangeView.setEnd(sensor.getUpperThreshold());
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(getResources().getString(R.string.action_thresholds) + ": " + sensor.getName())
                     .setIcon(R.drawable.ic_settings_black_24dp)

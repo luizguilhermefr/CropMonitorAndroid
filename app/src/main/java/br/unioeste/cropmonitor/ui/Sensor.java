@@ -3,6 +3,7 @@ package br.unioeste.cropmonitor.ui;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -19,6 +20,7 @@ public class Sensor {
 
     private static final Integer LOWER_VOLTAGE = 0;
     private static final Integer HIGHER_VOLTAGE = 5;
+    private static final Integer THRESHOLD_PRECISION = 20;
     private String name;
     private Integer id;
     private BigDecimal value;
@@ -30,8 +32,8 @@ public class Sensor {
     private TextView sensorHighestValue;
     private View.OnClickListener settingsAction;
     private Handler uiHandler;
-    private BigDecimal lowerThreshold;
-    private BigDecimal upperThreshold;
+    private Integer lowerThreshold;
+    private Integer upperThreshold;
     private BigDecimal lowestValue = new BigDecimal(Integer.MAX_VALUE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
     private BigDecimal highestValue = new BigDecimal(Integer.MIN_VALUE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
 
@@ -40,19 +42,8 @@ public class Sensor {
         this.name = name;
         this.context = context;
         this.uiHandler = new Handler();
-        this.lowerThreshold = new BigDecimal(LOWER_VOLTAGE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
-        this.upperThreshold = new BigDecimal(HIGHER_VOLTAGE).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_DOWN);
-        this.settingsAction = settingsAction;
-        buildElements();
-    }
-
-    public Sensor(Context context, View.OnClickListener settingsAction, Integer id, String name, BigDecimal lowerThreshold, BigDecimal upperThreshold) {
-        this.id = id;
-        this.name = name;
-        this.context = context;
-        this.lowerThreshold = lowerThreshold;
-        this.upperThreshold = upperThreshold;
-        this.uiHandler = new Handler();
+        this.lowerThreshold = LOWER_VOLTAGE;
+        this.upperThreshold = HIGHER_VOLTAGE;
         this.settingsAction = settingsAction;
         buildElements();
     }
@@ -175,29 +166,66 @@ public class Sensor {
         return this;
     }
 
+    @NonNull
+    private Integer decimalToIntegerThreshold(BigDecimal value) {
+        return (int) Math.round((value.doubleValue() * THRESHOLD_PRECISION) / HIGHER_VOLTAGE);
+    }
+
+    @NonNull
+    private BigDecimal integerToDecimalThreshold(Integer value) {
+        return new BigDecimal((value * HIGHER_VOLTAGE) / THRESHOLD_PRECISION).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_FLOOR);
+    }
+
+    public BigDecimal getDecimalLowerThreshold() {
+        return integerToDecimalThreshold(lowerThreshold);
+    }
+
+    public Integer getLowerThreshold() {
+        return lowerThreshold;
+    }
+
+    public Sensor setLowerThreshold(Integer value) {
+        lowerThreshold = value;
+
+        return this;
+    }
+
+    public BigDecimal getDecimalUpperThreshold() {
+        return integerToDecimalThreshold(upperThreshold);
+    }
+
+    public Integer getUpperThreshold() {
+        return upperThreshold;
+    }
+
+    public Sensor setUpperThreshold(Integer value) {
+        upperThreshold = value;
+
+        return this;
+    }
+
     public Sensor setThresholds(BigDecimal lower, BigDecimal upper) {
+        lowerThreshold = decimalToIntegerThreshold(lower);
+        upperThreshold = decimalToIntegerThreshold(upper);
+
+        return this;
+    }
+
+    public Sensor setThresholds(Integer lower, Integer upper) {
         lowerThreshold = lower;
         upperThreshold = upper;
 
         return this;
     }
 
-    public BigDecimal getLowerThreshold() {
-        return lowerThreshold;
-    }
-
-    public Sensor setLowerThreshold(BigDecimal newValue) {
-        lowerThreshold = newValue;
+    public Sensor setLowerThreshold(BigDecimal value) {
+        lowerThreshold = decimalToIntegerThreshold(value);
 
         return this;
     }
 
-    public BigDecimal getUpperThreshold() {
-        return upperThreshold;
-    }
-
-    public Sensor setUpperThreshold(BigDecimal newValue) {
-        upperThreshold = newValue;
+    public Sensor setUpperThreshold(BigDecimal value) {
+        upperThreshold = decimalToIntegerThreshold(value);
 
         return this;
     }
