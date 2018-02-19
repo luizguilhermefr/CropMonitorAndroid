@@ -134,7 +134,9 @@ public class BluetoothConnection {
     }
 
     public BluetoothConnection write(byte[] out) {
-        connectedThread.write(out);
+        if (connectedThread != null) {
+            connectedThread.write(out);
+        }
 
         return this;
     }

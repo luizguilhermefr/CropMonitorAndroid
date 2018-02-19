@@ -188,7 +188,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showDialogForActionThresholds(Integer sensorId) {
+    private void requestThresholdsUpdate(final Integer sensorId, final Integer lower, final Integer upper) {
+        String requestLower = Protocol.makeUpdateThresholdMessage(sensorId, true, Sensor.integerToDecimalThreshold(lower));
+        String requestUpper = Protocol.makeUpdateThresholdMessage(sensorId, false, Sensor.integerToDecimalThreshold(upper));
+        bluetoothConnection.write(requestLower.getBytes());
+        bluetoothConnection.write(requestUpper.getBytes());
+    }
+
+    private void showDialogForActionThresholds(final Integer sensorId) {
         Sensor sensor = getSensorById(sensorId);
         dialogView = null;
         dialogView = getLayoutInflater().inflate(R.layout.dialog_range, null);
@@ -202,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                     .setView(dialogView)
                     .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            // TODO
+                            requestThresholdsUpdate(sensorId, thresholdRangeView.getStart(), thresholdRangeView.getEnd());
                         }
                     })
                     .setNegativeButton(R.string.cancel, null);

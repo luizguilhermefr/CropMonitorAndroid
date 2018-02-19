@@ -73,6 +73,16 @@ public class Protocol {
     }
 
     @NonNull
+    public static String makeUpdateThresholdMessage(final Integer sensorId, boolean lowerNotUpper, BigDecimal value) {
+        StringBuilder builder = new StringBuilder(MESSAGE_LEN);
+        builder.append(' ');
+        builder.append(lowerNotUpper ? OP_LOWER_THRESHOLD_UPDATE : OP_UPPER_THRESHOLD_UPDATE);
+        builder.append(String.format("%02d", sensorId));
+        builder.append(value.toString());
+        return builder.toString();
+    }
+
+    @NonNull
     private String fragmenter(String input, Integer start, Integer length) {
         return input.substring(start, Math.min(start + length, MESSAGE_LEN));
     }
