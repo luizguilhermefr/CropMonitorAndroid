@@ -200,19 +200,19 @@ public class Sensor {
     }
 
     public Integer getLowerThreshold() {
-        return integerUpperThreshold;
-    }
-
-    public Sensor setLowerThreshold(BigDecimal value) {
-        integerLowerThreshold = decimalToIntegerThreshold(value);
-        decimalLowerThreshold = value;
-
-        return this;
+        return integerLowerThreshold;
     }
 
     public Sensor setLowerThreshold(Integer value) {
         integerLowerThreshold = value;
         decimalLowerThreshold = integerToDecimalThreshold(value);
+
+        return this;
+    }
+
+    public Sensor setLowerThreshold(BigDecimal value) {
+        integerLowerThreshold = decimalToIntegerThreshold(value);
+        decimalLowerThreshold = value;
 
         return this;
     }
@@ -225,16 +225,16 @@ public class Sensor {
         return integerUpperThreshold;
     }
 
-    public Sensor setUpperThreshold(BigDecimal value) {
-        integerLowerThreshold = decimalToIntegerThreshold(value);
-        decimalUpperThreshold = value;
+    public Sensor setUpperThreshold(Integer value) {
+        integerUpperThreshold = value;
+        decimalUpperThreshold = integerToDecimalThreshold(value);
 
         return this;
     }
 
-    public Sensor setUpperThreshold(Integer value) {
-        integerUpperThreshold = value;
-        decimalUpperThreshold = integerToDecimalThreshold(value);
+    public Sensor setUpperThreshold(BigDecimal value) {
+        integerUpperThreshold = decimalToIntegerThreshold(value);
+        decimalUpperThreshold = value;
 
         return this;
     }

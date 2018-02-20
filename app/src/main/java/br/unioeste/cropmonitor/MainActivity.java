@@ -120,7 +120,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onProtocolException() {
-        // Restart connection ?
+        System.out.println("<> Protocol exception.");
+        System.out.flush();
     }
 
     private void onAttemptingConnection() {
@@ -136,16 +137,19 @@ public class MainActivity extends AppCompatActivity {
         generateToast(R.string.sensor_responded_with_error);
     }
 
+    private void sFlush(String message) {
+        System.out.println("<> " + message);
+        System.out.flush();
+    }
+
     private void onMessageArrived(String message) {
         try {
             Protocol protocolParser = new Protocol(message);
             if (protocolParser.ok()) {
                 if (protocolParser.isUpdateSensor()) {
                     updateSensorUi(protocolParser.getSensor(), protocolParser.getValue());
-                } else if (protocolParser.isUpdateLowerThreshold()) {
-                    updateSensorLowerThreshold(protocolParser.getSensor(), protocolParser.getValue());
-                } else if (protocolParser.isUpdateUpperThreshold()) {
-                    updateSensorUpperThreshold(protocolParser.getSensor(), protocolParser.getValue());
+                } else if (protocolParser.isUpdateLowerThreshold() || protocolParser.isUpdateUpperThreshold()) {
+                    updateSensorLowerThreshold(protocolParser.getSensor(), protocolParser.getValue(), protocolParser.isUpdateUpperThreshold());
                 }
             } else {
                 onDeviceRespondedWithError();
@@ -174,17 +178,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateSensorLowerThreshold(final Integer sensorId, final BigDecimal value) {
+    private void updateSensorLowerThreshold(final Integer sensorId, final BigDecimal value, final Boolean upperNotLower) {
         Sensor sensor = getSensorById(sensorId);
         if (sensor != null) {
-            sensor.setLowerThreshold(value);
-        }
-    }
-
-    private void updateSensorUpperThreshold(final Integer sensorId, final BigDecimal value) {
-        Sensor sensor = getSensorById(sensorId);
-        if (sensor != null) {
-            sensor.setUpperThreshold(value);
+            if (upperNotLower) {
+                sensor.setUpperThreshold(value);
+            } else {
+                sensor.setLowerThreshold(value);
+            }
         }
     }
 

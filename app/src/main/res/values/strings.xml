@@ -3,7 +3,7 @@
     <string name="action_thresholds">Action Thresholds</string>
     <string name="app_name" translatable="false">CropMonitor</string>
     <string name="attempting_connection">Attempting connection…</string>
-    <string name="authorization_denied">Authorize Bluetooth and try again.</string>
+    <string name="authorization_denied">Authorize Bluetooth and try again</string>
     <string name="bonded_with">Bonded with</string>
     <string name="bonding_with">Bonding with</string>
     <string name="cancel">Cancel</string>
@@ -11,7 +11,7 @@
     <string name="connection_denied">Connection denied. Please, try again.</string>
     <string name="connection_error">Connection error.</string>
     <string name="connection_successful">Connected successfully.</string>
-    <string name="device_not_supported">Connection error: device isn\'t supported.</string>
+    <string name="device_not_supported">Connection error: device isn\'t supported</string>
     <string name="disconnecting">Disconnecting…</string>
     <string name="edit">Edit</string>
     <string name="lower_threshold">Lower Threshold</string>
@@ -25,5 +25,6 @@
     <string name="sensor_responded_with_error">Device responded with error on sensor</string>
     <string name="start">Start</string>
     <string name="target_found">Target device found.</string>
+    <string name="thresholds_synchronized">Thresholds synchronized</string>
     <string name="update">Update</string>
 </resources>

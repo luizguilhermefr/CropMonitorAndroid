@@ -10,15 +10,16 @@
     <string name="connection_denied">Conexão negada. Tente novamente.</string>
     <string name="connection_error">Erro de conexão.</string>
     <string name="connection_successful">Conectado com sucesso</string>
-    <string name="device_not_supported">Erro de conexão: o dispositivo não é suportado.</string>
+    <string name="device_not_supported">Erro de conexão: o dispositivo não é suportado</string>
     <string name="disconnecting">Desconectando…</string>
     <string name="edit">Editar</string>
     <string name="lower_threshold">Limiar Inferior</string>
     <string name="preferences">Opções</string>
     <string name="protocol_error">Erro de protocolo. Reinicie o dispositivo.</string>
     <string name="scanning">Buscando…</string>
-    <string name="sensor_responded_with_error">Dispositivo respondeu com erro no sensor.</string>
+    <string name="sensor_responded_with_error">Dispositivo respondeu com erro no sensor</string>
     <string name="start">Iniciar</string>
-    <string name="target_found">Dispositivo encontrado.</string>
+    <string name="target_found">Dispositivo encontrado</string>
+    <string name="thresholds_synchronized">Limiares sincronizados</string>
     <string name="update">Atualizar</string>
 </resources>
