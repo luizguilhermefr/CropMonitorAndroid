@@ -14,7 +14,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -41,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private SimpleRangeView thresholdRangeView;
     private View dialogView;
+    private TextView thresholdStartView;
+    private TextView thresholdEndView;
 
     private void generateToast(String text) {
         Context context = getApplicationContext();
@@ -216,6 +221,20 @@ public class MainActivity extends AppCompatActivity {
         dialogView = null;
         dialogView = getLayoutInflater().inflate(R.layout.dialog_range, null);
         thresholdRangeView = dialogView.findViewById(R.id.fixed_rangeview);
+        thresholdStartView = dialogView.findViewById(R.id.lowerThreshold);
+        thresholdEndView = dialogView.findViewById(R.id.upperThreshold);
+        thresholdRangeView.setOnTrackRangeListener(new SimpleRangeView.OnTrackRangeListener() {
+            @Override
+            public void onStartRangeChanged(@NotNull SimpleRangeView rangeView, int start) {
+                thresholdStartView.setText(Sensor.integerToDecimalThreshold(start).toString());
+            }
+
+            @Override
+            public void onEndRangeChanged(@NotNull SimpleRangeView rangeView, int end) {
+                thresholdEndView.setText(Sensor.integerToDecimalThreshold(end).toString());
+            }
+        });
+
         if (sensor != null) {
             thresholdRangeView.setStart(sensor.getLowerThreshold());
             thresholdRangeView.setEnd(sensor.getUpperThreshold());

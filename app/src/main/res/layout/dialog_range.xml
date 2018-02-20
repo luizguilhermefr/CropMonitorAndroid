@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <me.bendik.simplerangeview.SimpleRangeView xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/fixed_rangeview"
@@ -12,7 +13,34 @@
         app:endFixed="20"
         app:minDistance="1"
         app:showFixedLine="true"
+        app:showLabels="true"
         app:start="0"
         app:startFixed="0" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/lowerThreshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|start"
+            android:layout_weight="1"
+            android:text="-"
+            android:textAlignment="viewStart" />
+
+        <TextView
+            android:id="@+id/upperThreshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:layout_weight="1"
+            android:text="-"
+            android:textAlignment="textEnd" />
+
+    </LinearLayout>
 
 </LinearLayout>
