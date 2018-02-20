@@ -47,10 +47,21 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(context, text, Toast.LENGTH_LONG).show();
     }
 
+    private void generateToast(String text, Integer length) {
+        Context context = getApplicationContext();
+        Toast.makeText(context, text, length).show();
+    }
+
     private void generateToast(Integer resource) {
         CharSequence text = getResources().getString(resource);
         Context context = getApplicationContext();
         Toast.makeText(context, text, Toast.LENGTH_LONG).show();
+    }
+
+    private void generateToast(Integer resource, Integer length) {
+        CharSequence text = getResources().getString(resource);
+        Context context = getApplicationContext();
+        Toast.makeText(context, text, length).show();
     }
 
     private void registerBroadcasters() {
@@ -120,8 +131,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onProtocolException() {
-        System.out.println("<> Protocol exception.");
-        System.out.flush();
+        sFlush("Protocol exception.");
     }
 
     private void onAttemptingConnection() {
@@ -149,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
                 if (protocolParser.isUpdateSensor()) {
                     updateSensorUi(protocolParser.getSensor(), protocolParser.getValue());
                 } else if (protocolParser.isUpdateLowerThreshold() || protocolParser.isUpdateUpperThreshold()) {
+                    generateToast(R.string.thresholds_synchronized, Toast.LENGTH_SHORT);
                     updateSensorLowerThreshold(protocolParser.getSensor(), protocolParser.getValue(), protocolParser.isUpdateUpperThreshold());
                 }
             } else {
@@ -192,6 +203,10 @@ public class MainActivity extends AppCompatActivity {
     private void requestThresholdsUpdate(final Integer sensorId, final Integer lower, final Integer upper) {
         String requestLower = Protocol.makeUpdateThresholdMessage(sensorId, true, Sensor.integerToDecimalThreshold(lower));
         String requestUpper = Protocol.makeUpdateThresholdMessage(sensorId, false, Sensor.integerToDecimalThreshold(upper));
+
+        sFlush("WRITING " + (requestLower));
+        sFlush("WRITING " + (requestUpper));
+
         bluetoothConnection.write(requestLower.getBytes());
         bluetoothConnection.write(requestUpper.getBytes());
     }

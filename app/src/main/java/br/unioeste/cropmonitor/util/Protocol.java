@@ -3,6 +3,7 @@ package br.unioeste.cropmonitor.util;
 import android.support.annotation.NonNull;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 
 import br.unioeste.cropmonitor.util.exceptions.ProtocolException;
 
@@ -77,8 +78,8 @@ public class Protocol {
         StringBuilder builder = new StringBuilder(MESSAGE_LEN);
         builder.append(' ');
         builder.append(lowerNotUpper ? OP_LOWER_THRESHOLD_UPDATE : OP_UPPER_THRESHOLD_UPDATE);
-        builder.append(String.format("%02d", sensorId));
-        builder.append(value.toString());
+        builder.append(String.format(Locale.ENGLISH, "%0" + SENSOR_LEN + "d", sensorId));
+        builder.append(String.format(Locale.ENGLISH, "%0" + (INTEGER_LEN + DECIMAL_LEN + 1) + "." + DECIMAL_LEN + "f", value).replaceAll("\\.", ""));
         return builder.toString();
     }
 
