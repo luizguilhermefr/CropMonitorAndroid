@@ -21,7 +21,7 @@ public class Sensor {
 
     private static final Integer LOWER_VOLTAGE = 0;
     private static final Integer HIGHER_VOLTAGE = 5;
-    private static final Integer THRESHOLD_PRECISION = 20;
+    private static final Integer THRESHOLD_PRECISION = 50;
     private String name;
     private Integer id;
     private BigDecimal value;
@@ -60,7 +60,7 @@ public class Sensor {
 
     @NonNull
     public static BigDecimal integerToDecimalThreshold(Integer value) {
-        return new BigDecimal((value * HIGHER_VOLTAGE) / THRESHOLD_PRECISION).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_FLOOR);
+        return new BigDecimal(((float) value * HIGHER_VOLTAGE) / (float) THRESHOLD_PRECISION).setScale(Protocol.DECIMAL_LEN, BigDecimal.ROUND_FLOOR);
     }
 
     public Integer getId() {
@@ -203,16 +203,16 @@ public class Sensor {
         return integerLowerThreshold;
     }
 
-    public Sensor setLowerThreshold(BigDecimal value) {
-        integerLowerThreshold = decimalToIntegerThreshold(value);
-        decimalLowerThreshold = value;
+    public Sensor setLowerThreshold(Integer value) {
+        integerLowerThreshold = value;
+        decimalLowerThreshold = integerToDecimalThreshold(value);
 
         return this;
     }
 
-    public Sensor setLowerThreshold(Integer value) {
-        integerLowerThreshold = value;
-        decimalLowerThreshold = integerToDecimalThreshold(value);
+    public Sensor setLowerThreshold(BigDecimal value) {
+        integerLowerThreshold = decimalToIntegerThreshold(value);
+        decimalLowerThreshold = value;
 
         return this;
     }
@@ -225,16 +225,16 @@ public class Sensor {
         return integerUpperThreshold;
     }
 
-    public Sensor setUpperThreshold(BigDecimal value) {
-        integerUpperThreshold = decimalToIntegerThreshold(value);
-        decimalUpperThreshold = value;
+    public Sensor setUpperThreshold(Integer value) {
+        integerUpperThreshold = value;
+        decimalUpperThreshold = integerToDecimalThreshold(value);
 
         return this;
     }
 
-    public Sensor setUpperThreshold(Integer value) {
-        integerUpperThreshold = value;
-        decimalUpperThreshold = integerToDecimalThreshold(value);
+    public Sensor setUpperThreshold(BigDecimal value) {
+        integerUpperThreshold = decimalToIntegerThreshold(value);
+        decimalUpperThreshold = value;
 
         return this;
     }

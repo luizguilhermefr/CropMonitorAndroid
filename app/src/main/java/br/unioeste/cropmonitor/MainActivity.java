@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import br.unioeste.cropmonitor.connection.BluetoothConnection;
 import br.unioeste.cropmonitor.ui.Sensor;
@@ -165,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
                     updateSensorUi(protocolParser.getSensor(), protocolParser.getValue());
                 } else if (protocolParser.isUpdateLowerThreshold() || protocolParser.isUpdateUpperThreshold()) {
                     generateToast(R.string.thresholds_synchronized, Toast.LENGTH_SHORT);
-                    updateSensorLowerThreshold(protocolParser.getSensor(), protocolParser.getValue(), protocolParser.isUpdateUpperThreshold());
+                    updateSensorThreshold(protocolParser.getSensor(), protocolParser.getValue(), protocolParser.isUpdateUpperThreshold());
                 }
             } else {
                 onDeviceRespondedWithError();
@@ -194,7 +195,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateSensorLowerThreshold(final Integer sensorId, final BigDecimal value, final Boolean upperNotLower) {
+    private void updateSensorThreshold(final Integer sensorId, final BigDecimal value, final Boolean upperNotLower) {
+        sFlush("UPDATING" + sensorId + " WITH " + value);
         Sensor sensor = getSensorById(sensorId);
         if (sensor != null) {
             if (upperNotLower) {
@@ -206,14 +208,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestThresholdsUpdate(final Integer sensorId, final Integer lower, final Integer upper) {
-        String requestLower = Protocol.makeUpdateThresholdMessage(sensorId, true, Sensor.integerToDecimalThreshold(lower));
-        String requestUpper = Protocol.makeUpdateThresholdMessage(sensorId, false, Sensor.integerToDecimalThreshold(upper));
-
-        sFlush("WRITING " + (requestLower));
-        sFlush("WRITING " + (requestUpper));
-
-        bluetoothConnection.write(requestLower.getBytes());
-        bluetoothConnection.write(requestUpper.getBytes());
+        bluetoothConnection.write(Protocol.makeUpdateThresholdMessage(sensorId, true, Sensor.integerToDecimalThreshold(lower)).getBytes());
+        bluetoothConnection.write(Protocol.makeUpdateThresholdMessage(sensorId, false, Sensor.integerToDecimalThreshold(upper)).getBytes());
     }
 
     private void showDialogForActionThresholds(final Integer sensorId) {
@@ -226,18 +222,20 @@ public class MainActivity extends AppCompatActivity {
         thresholdRangeView.setOnTrackRangeListener(new SimpleRangeView.OnTrackRangeListener() {
             @Override
             public void onStartRangeChanged(@NotNull SimpleRangeView rangeView, int start) {
-                thresholdStartView.setText(Sensor.integerToDecimalThreshold(start).toString());
+                thresholdStartView.setText(String.format(Locale.ENGLISH, "%.2f", Sensor.integerToDecimalThreshold(start)));
             }
 
             @Override
             public void onEndRangeChanged(@NotNull SimpleRangeView rangeView, int end) {
-                thresholdEndView.setText(Sensor.integerToDecimalThreshold(end).toString());
+                thresholdEndView.setText(String.format(Locale.ENGLISH, "%.2f", Sensor.integerToDecimalThreshold(end)));
             }
         });
 
         if (sensor != null) {
             thresholdRangeView.setStart(sensor.getLowerThreshold());
             thresholdRangeView.setEnd(sensor.getUpperThreshold());
+            thresholdStartView.setText(String.format(Locale.ENGLISH, "%.2f", sensor.getDecimalLowerThreshold()));
+            thresholdEndView.setText(String.format(Locale.ENGLISH, "%.2f", sensor.getDecimalUpperThreshold()));
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(getResources().getString(R.string.action_thresholds) + ": " + sensor.getName())
                     .setIcon(R.drawable.ic_settings_black_24dp)
