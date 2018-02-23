@@ -196,7 +196,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateSensorThreshold(final Integer sensorId, final BigDecimal value, final Boolean upperNotLower) {
-        sFlush("UPDATING" + sensorId + " WITH " + value);
         Sensor sensor = getSensorById(sensorId);
         if (sensor != null) {
             if (upperNotLower) {
